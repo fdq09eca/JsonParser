@@ -106,13 +106,51 @@ CL::Token* Tokenizer::advanceAndGetToken(Token::Type type, size_t n)
 
 CL::Token* Tokenizer::getNumber()
 {
+	if (c == nullptr || *c == '\0')
+		return nullptr;
+
 	auto* p = c;
 
-	while (isdigit(*c)) {
+
+	if (*c == '-') advance();
+
+	if (*c == '0') {
 		advance();
+		if (isdigit(*c)) {
+			throw MyError("Invalid number.");
+		}
+	}
+	else {
+		if (!isdigit(*c)) {
+			throw MyError("Invalid number.");
+		}
+		while (isdigit(*c)) {
+			advance();
+		}
 	}
 
+	if (*c == '.') {
+		advance();
+		if (!isdigit(*c)) {
+			throw MyError("Invalid number.");
+		}
+		while (isdigit(*c)) {
+			advance();
+		}
+	}
 
+	if (*c == 'e' || *c == 'E') {
+		advance();
+		if (*c == '+' || *c == '-') {
+			advance();
+		}
+		if (!isdigit(*c)) {
+			throw MyError("Invalid number.");
+		}
+		while (isdigit(*c)) {
+			advance();
+		}
+	}
 
 	return new Token(Token::Type::Number, String(p, c - p));
 }
