@@ -112,18 +112,19 @@ CL::Token* Tokenizer::getNumber()
 	auto* p = c;
 
 
-	if (*c == '-') advance();
+	if (*c == '-') {
+		advance();
+		if (!isdigit(*c)) throw MyError("Invalid number.");
+
+	}
 
 	if (*c == '0') {
 		advance();
-		if (isdigit(*c)) {
-			throw MyError("Invalid number.");
-		}
+		if (isdigit(*c)) throw MyError("Invalid number.");
+
 	}
 	else {
-		if (!isdigit(*c)) {
-			throw MyError("Invalid number.");
-		}
+		if (!isdigit(*c)) throw MyError("Invalid number.");
 		while (isdigit(*c)) {
 			advance();
 		}
@@ -131,9 +132,7 @@ CL::Token* Tokenizer::getNumber()
 
 	if (*c == '.') {
 		advance();
-		if (!isdigit(*c)) {
-			throw MyError("Invalid number.");
-		}
+		if (!isdigit(*c)) throw MyError("Invalid number.");
 		while (isdigit(*c)) {
 			advance();
 		}
@@ -141,12 +140,10 @@ CL::Token* Tokenizer::getNumber()
 
 	if (*c == 'e' || *c == 'E') {
 		advance();
-		if (*c == '+' || *c == '-') {
-			advance();
-		}
-		if (!isdigit(*c)) {
-			throw MyError("Invalid number.");
-		}
+
+		if (*c == '+' || *c == '-') advance();
+		if (!isdigit(*c)) throw MyError("Invalid number.");
+
 		while (isdigit(*c)) {
 			advance();
 		}

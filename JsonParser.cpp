@@ -107,6 +107,27 @@ public:
 		_getNumber("1.0E0");
 		_getNumber("1.0E+0");
 		_getNumber("1.0E-0");
+		
+		_getNumber("12");
+		_getNumber("12.0");
+		_getNumber("12.00");
+		_getNumber("12.000");
+		_getNumber("12.1");
+		_getNumber("12.11");
+		_getNumber("12.123");
+		_getNumber("12.0e0");
+		_getNumber("12.0e+0");
+		_getNumber("12.0e-0");
+		_getNumber("12.123e0");
+		_getNumber("12.123e+0");
+		_getNumber("12.123e-0");
+		
+		_getNumber("12.123e123");
+		_getNumber("12.123e+123");
+		_getNumber("12.123e-123");
+		_getNumber("12.0E0");
+		_getNumber("12.0E+123");
+		_getNumber("12.0E-123");
 
 		//positive
 		_getNumber("-1");
