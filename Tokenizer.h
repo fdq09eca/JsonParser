@@ -14,6 +14,7 @@ struct Token {
 		CloseBrace,		// ]				[x]
 		OpenBracket,	// {				[x]
 		CloseBracket,	// }				[x]
+		Eof,		    // EOF				[ ]
 	};
 
 	Type type = Type::Null;
@@ -40,6 +41,8 @@ class Tokenizer
 	}
 
 public:
+	Tokenizer() = default;
+
 	Tokenizer(const char* sz) : c(sz), src(sz) {
 		dst = c + strlen(c);
 	}

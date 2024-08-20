@@ -1,18 +1,19 @@
 #pragma once
 
-#include "MyCommon.h"
+#include "Tokenizer.h"
 
 namespace CL
 {
 class JsonValue;
 using JsonString = String;
-using JsonArray = Vector<JsonValue>;
-using JsonObject = Map<String, JsonValue>;
+using JsonArray = Vector<JsonValue*>;		// why not const ref?
+using JsonObject = Map<String, JsonValue*>;	// why not const ref?
 using JsonNumber = f64;
 using JsonBoolean = bool;
 
 class JsonValue {
-private:
+public:
+
 	enum class EType
 	{
 		Undefined = 0,
@@ -24,6 +25,7 @@ private:
 		Object,
 	};
 
+private:
 	union Value
 	{
 		JsonNumber number;
@@ -36,12 +38,19 @@ private:
 	EType _type = EType::Undefined;
 	Value _value;
 
+
 public:
-
-
 	~JsonValue()
 	{
 		setNull();
+	}
+
+	EType getType() const {
+		return _type;
+	}
+
+	bool getBoolean() const {
+		return _value.boolean;
 	}
 
 	bool isNull() const {
@@ -70,6 +79,12 @@ public:
 		_type = EType::Null;
 	}
 
+	JsonNumber getNumber() const {
+		if (_type != EType::Number)
+			throw MyError("JsonValue::getNumber failed");
+		return _value.number;
+	}
+
 	void setNumber(JsonNumber n) {
 		if (_type != EType::Number) {
 			setNull();
@@ -93,6 +108,12 @@ public:
 		return _value.object;
 	}
 
+	void setObject(JsonObject* obj) {
+		setNull();
+		_type = EType::Object;
+		_value.object = obj;
+	}
+
 	JsonObject* setToObject() {
 		auto* p = getObject();
 
@@ -109,6 +130,12 @@ public:
 		if (_type != EType::Array)
 			return nullptr;
 		return _value.array;
+	}
+
+	void setArray(JsonArray* arr) {
+		setNull();
+		_type = EType::Array;
+		_value.array = arr;
 	}
 
 	JsonArray* setToArray() {
@@ -144,106 +171,147 @@ public:
 class JsonParser {
 
 private:
+	using Lexer = Tokenizer;
 
+	Lexer* lexer = nullptr;
+	Token* currentToken = nullptr;
 
-
-public:
-	static const char* parse(const char* sz, JsonString& str) {
-		if (sz == nullptr) {
-			throw MyError("sz == nullptr");
+	void _addJsonObjectMember(JsonObject* obj) {
+		auto key = currentToken->value;
+		if (!tryAdvance(Token::Type::String)) throw MyError("parseObject failed");
+		if (!tryAdvance(Token::Type::Colon)) throw MyError("parseObject failed");
+		auto* v = parseValue();
+		if (!v) {
+			throw MyError("parseObject failed");
 		}
-
-		const char* p = sz;
-		if (*p != '"') {
-			throw MyError("Invalid character");
-		}
-
-		p++;
-
-
-		const char* pEnd = Util::findNextChar(p, '"', '\\');
-
-
-
-
-
-		if (pEnd == nullptr) {
-			throw MyError("Invalid character");
-		}
-
-		str.assign(p, pEnd - p);
-		return pEnd + 1;
+		obj->emplace(key, v);
 	}
 
-	static JsonValue parse(const char* sz) {
-		if (sz == nullptr) {
-			throw MyError("sz == nullptr");
+	void _addJsonArrayElement(JsonArray* arr) {
+		auto* e = parseValue();
+		if (!e) throw MyError("parseArray failed");
+		arr->emplace_back(e);
+	}
+
+public:
+	JsonParser(const char* sz) {
+		lexer = new Lexer(sz);
+		currentToken = lexer->getNextToken();
+	}
+
+	bool tryAdvance(Token::Type expected_type) {
+		if (currentToken->type != expected_type) return false;
+		currentToken = lexer->getNextToken();
+		return true;
+	}
+
+	JsonValue* parseArray(JsonArray* arr = nullptr) {
+		auto b = tryAdvance(Token::Type::OpenBracket);
+		MY_ASSERT(b);
+
+		if (arr == nullptr) {
+			arr = new JsonArray();
 		}
 
-		JsonValue root;
-
-		while (true) {
-			const char* p = sz;
-
-			if (*p == '\0') {
-				break;
-			}
-
-			else if (*p == '{') {
-
-				JsonString key;
-				JsonValue val;
-
-				p = strchr(p, '"');
+		_addJsonArrayElement(arr);
 
 
-				auto* obj = root.setToObject();
-				if (obj == nullptr) {
-					throw MyError("obj == nullptr");
-				}
-				break;
-			}
-
-			else if (*p == '}') {
-				break;
-			}
-
-			else if (*p == '[') {
-				auto* arr = root.setToArray();
-				if (arr == nullptr) {
-					throw MyError("arr == nullptr");
-				}
-				break;
-			}
-
-			else if (*p == ']') {
-				break;
-			}
-
-			else if (*p == '"') {
-				root.setString(sz);
-				break;
-			}
-
-			else if (*p == ',') {
-				break;
-			}
-
-			else if (*p == ':') {
-				break;
-			}
-
-			else if (*p == ' ' || *p == '\t' || *p == '\n' || *p == '\r') {
-				sz++;
-			}
-
-			else {
-				throw MyError("Invalid character");
-			}
-
-
+		while (tryAdvance(Token::Type::Comma)) {
+			_addJsonArrayElement(arr);
 		}
-		return root;
+
+		if (tryAdvance(Token::Type::CloseBracket)) {
+			auto* v = new JsonValue();
+			v->setArray(arr);
+			return v;
+		}
+
+	}
+
+
+
+	JsonValue* parseObject(JsonObject* obj = nullptr) {
+		auto b = tryAdvance(Token::Type::OpenBrace);
+		MY_ASSERT(b);
+
+		if (obj == nullptr) {
+			obj = new JsonObject();
+		}
+
+		_addJsonObjectMember(obj);
+
+		while (tryAdvance(Token::Type::Comma)) {
+			_addJsonObjectMember(obj);
+		}
+
+		if (tryAdvance(Token::Type::CloseBrace)) {
+			auto* v = new JsonValue();
+			v->setObject(obj);
+			return v;
+		}
+	}
+
+
+
+
+
+
+
+	JsonValue* parseValue() {
+
+		switch (currentToken->type)
+		{
+		case Token::Type::Eof:
+			return nullptr;
+
+		case Token::Type::Null: {
+			JsonValue* v = new JsonValue();
+			auto b = tryAdvance(Token::Type::Null);
+			MY_ASSERT(b);
+			v->setNull();
+			return v;
+		}
+
+		case Token::Type::Number: {
+			const auto& tv = currentToken->value;
+			MY_ASSERT(tryAdvance(Token::Type::Number));
+			JsonValue* v = new JsonValue();
+			v->setNumber(std::stod(tv));
+			return v;
+		}
+
+		case Token::Type::String: {
+
+			const auto& tv = currentToken->value;
+			MY_ASSERT(tryAdvance(Token::Type::String));
+
+			JsonValue* v = new JsonValue();
+			v->setString(tv.c_str());
+			return v;
+		} break;
+
+		case Token::Type::Boolean: {
+			const auto& tv = currentToken->value;
+			MY_ASSERT(tryAdvance(Token::Type::Boolean));
+			JsonValue* v = new JsonValue();
+			v->setBoolean(tv == "true");
+			return v;
+		} break;
+
+		case Token::Type::OpenBrace: {
+			return parseObject();
+		} break;
+
+		case Token::Type::OpenBracket: {
+			return parseArray();
+		}
+
+		default:
+			printf("parseValue failed: unknown Token %d, %s", currentToken->type, currentToken->value.c_str());
+			throw MyError("[ERR] parseValue failed");
+		}
+
+		return nullptr;
 	};
 
 

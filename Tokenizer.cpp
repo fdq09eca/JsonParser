@@ -1,5 +1,6 @@
 #include "Tokenizer.h"
 namespace CL {
+
 bool Tokenizer::isEnd() const {
 	MY_ASSERT(c != nullptr);
 	return *c == '\0';
@@ -57,19 +58,20 @@ Token* Tokenizer::getString() {
 }
 
 Token* Tokenizer::getNextToken() {
-	if (isEnd()) {
-		return nullptr;
-	}
+
+
 
 	skipSpaces();
 
-	if (isdigit(*c)) {
+	if (*c == '-' || isdigit(*c)) {
 		return getNumber();
 	}
+
 
 	switch (*c)
 	{
 
+	case '\0': return advanceAndGetToken(Token::Type::Eof);
 	case '[': return advanceAndGetToken(Token::Type::OpenBracket);
 	case ',': return advanceAndGetToken(Token::Type::Comma);
 	case ']': return advanceAndGetToken(Token::Type::CloseBracket);
@@ -78,17 +80,13 @@ Token* Tokenizer::getNextToken() {
 	case ':': return advanceAndGetToken(Token::Type::Colon);
 	case '}': return advanceAndGetToken(Token::Type::CloseBrace);
 
-
-
 	case 'n': return getNull();
 	case '"': return getString();
 	case 't': case 'f': return getBoolean();
 
-
-
-
 	default: {
-		printf("getNextToken failed at %s", c);
+
+		printf("getNextToken failed: unknown Token %c", *c);
 		throw MyError("getNextToken failed");
 	} break;
 
@@ -99,8 +97,14 @@ Token* Tokenizer::getNextToken() {
 
 CL::Token* Tokenizer::advanceAndGetToken(Token::Type type, size_t n)
 {
+	if (!c) {
+		throw MyError("advanceAndGetToken failed");
+	}
+
 	auto* t = new Token(type, { *c });
-	advance(n);
+
+	if (*c != '\0')
+		advance(n);
 	return t;
 }
 
