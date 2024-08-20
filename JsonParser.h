@@ -178,8 +178,8 @@ private:
 
 	void _addJsonObjectMember(JsonObject* obj) {
 		auto key = currentToken->value;
-		if (!tryAdvance(Token::Type::String)) throw MyError("parseObject failed");
-		if (!tryAdvance(Token::Type::Colon)) throw MyError("parseObject failed");
+		if (!tryAdvance(Token::Type::String))	throw MyError("parseObject failed");
+		if (!tryAdvance(Token::Type::Colon))	throw MyError("parseObject failed");
 		auto* v = parseValue();
 		if (!v) {
 			throw MyError("parseObject failed");
@@ -250,12 +250,6 @@ public:
 			return v;
 		}
 	}
-
-
-
-
-
-
 
 	JsonValue* parseValue() {
 

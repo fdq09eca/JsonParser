@@ -173,9 +173,7 @@ Token* Tokenizer::getBoolean()
 		throw MyError("getBoolean failed.");
 	}
 
-	Token* t = new Token();
-	t->type = Token::Type::Boolean;
-	t->value = b;
+	Token* t = new Token(Token::Type::Boolean, b);
 	advance(t->value.length());
 
 	return t;

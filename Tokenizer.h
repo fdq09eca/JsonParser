@@ -14,7 +14,7 @@ struct Token {
 		CloseBrace,		// ]				[x]
 		OpenBracket,	// {				[x]
 		CloseBracket,	// }				[x]
-		Eof,		    // EOF				[ ]
+		Eof,		    // EOF				[x]
 	};
 
 	Type type = Type::Null;
@@ -22,6 +22,12 @@ struct Token {
 
 	Token() = default;
 	Token(Type t, const String& v) : type(t), value(v) {}
+
+	~Token()
+	{
+		type = Type::Null;
+		value.clear();
+	}
 
 	inline void print() const {
 		printf("Token: (%d, %s)\n", type, value.c_str());
@@ -52,7 +58,6 @@ public:
 	}
 
 	Token* getNextToken();
-
 
 	Token* getNull();
 	Token* getNumber();
