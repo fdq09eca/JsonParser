@@ -29,14 +29,14 @@ public:
 		}
 
 		{
-			const char* json = "{ \"key1\" : 123, \"key2\" : \"Hello, World!\" }";
+			const char* json = "{ \"key1\" : 123, \"key2\" : \"Hello, World!\", \"key3\" : [1, true, false, \"hello\"] }";
 			JsonParser p(json);
 			auto* o = p.parseValue();
 			TEST(o->isNull() == false);
 			TEST(o->getType() == JsonValue::EType::Object);
 			JsonObject* obj = o->getObject();
 			TEST(obj != nullptr);
-			TEST(obj->size() == 2);
+			TEST(obj->size() == 3);
 			TEST(obj->find("key1") != obj->end()); // key1 exists
 			auto* v = obj->at("key1");
 			TEST(v->getType() == JsonValue::EType::Number);
@@ -46,6 +46,50 @@ public:
 			v = obj->at("key2");
 			TEST(v->getType() == JsonValue::EType::String);
 			TEST(*v->getString() == "Hello, World!");
+
+			TEST(obj->find("key3") != obj->end()); // key3 exists
+			v = obj->at("key3");
+			TEST(v->getType() == JsonValue::EType::Array);
+			auto* vec = v->getArray();
+			TEST(vec->size() == 4);
+
+			TEST(vec->at(0)->getType() == JsonValue::EType::Number);
+			TEST(vec->at(0)->getNumber() == 1);
+
+			TEST(vec->at(1)->getType() == JsonValue::EType::Boolean);
+			TEST(vec->at(1)->getBoolean() == true);
+
+			TEST(vec->at(2)->getType() == JsonValue::EType::Boolean);
+			TEST(vec->at(2)->getBoolean() == false);
+
+			TEST(vec->at(3)->getType() == JsonValue::EType::String);
+			TEST(*vec->at(3)->getString() == "hello");
+
+		}
+
+		{
+			const char* json = "{ \"key1\" : { \"key2\" : { \"key3\" : 123 } } }";
+			JsonParser p(json);
+			auto* o = p.parseValue();
+			TEST(o->isNull() == false);
+			TEST(o->getType() == JsonValue::EType::Object);
+			JsonObject* obj = o->getObject();
+			TEST(obj != nullptr);
+			TEST(obj->size() == 1);
+			TEST(obj->find("key1") != obj->end()); // key1 exists
+			auto* v = obj->at("key1");
+			TEST(v->getType() == JsonValue::EType::Object);
+			auto* obj2 = v->getObject();
+			TEST(obj2->size() == 1);
+			TEST(obj2->find("key2") != obj2->end()); // key2 exists
+			auto* v2 = obj2->at("key2");
+			TEST(v2->getType() == JsonValue::EType::Object);
+			auto* obj3 = v2->getObject();
+			TEST(obj3->size() == 1);
+			TEST(obj3->find("key3") != obj3->end()); // key3 exists
+			auto* v3 = obj3->at("key3");
+			TEST(v3->getType() == JsonValue::EType::Number);
+			TEST(v3->getNumber() == 123);
 		}
 	};
 
@@ -388,8 +432,8 @@ int main()
 	// CL::ParserTests::test_parseBoolean();
 	// CL::ParserTests::test_parseNull();
 
-	CL::ParserTests::test_parseArray();
-	//CL::ParserTests::test_parseObject();
+	//CL::ParserTests::test_parseArray();
+	CL::ParserTests::test_parseObject();
 
 
 
