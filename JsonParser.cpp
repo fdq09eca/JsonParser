@@ -416,6 +416,259 @@ public:
 }; // class TokenizerTests
 
 
+JsonValue::~JsonValue()
+{
+	setNull();
+}
+
+JsonValue::EType JsonValue::getType() const {
+	return _type;
+}
+
+bool JsonValue::getBoolean() const {
+	return _value.boolean;
+}
+
+bool JsonValue::isNull() const {
+	return _type == EType::Null;
+}
+
+bool JsonValue::isUndefined() const {
+	return _type == EType::Undefined;
+}
+
+void JsonValue::setNull() {
+	switch (_type)
+	{
+	case JsonValue::EType::String:
+		delete _value.string;
+		break;
+	case JsonValue::EType::Array:
+		delete _value.array;
+		break;
+	case JsonValue::EType::Object:
+		delete _value.object;
+		break;
+	default:
+		break;
+	}
+	_type = EType::Null;
+}
+
+JsonNumber JsonValue::getNumber() const {
+	if (_type != EType::Number)
+		throw MyError("JsonValue::getNumber failed");
+	return _value.number;
+}
+
+void JsonValue::setNumber(JsonNumber n) {
+	if (_type != EType::Number) {
+		setNull();
+		_type = EType::Number;
+	}
+	_value.number = n;
+}
+
+void JsonValue::setBoolean(JsonBoolean b) {
+	if (_type != EType::Boolean) {
+		setNull();
+		_type = EType::Boolean;
+	}
+	_value.boolean = b;
+}
+
+JsonObject* JsonValue::getObject() const {
+	if (_type != EType::Object)
+		return nullptr;
+	return _value.object;
+}
+
+void JsonValue::setObject(JsonObject* obj) {
+	setNull();
+	_type = EType::Object;
+	_value.object = obj;
+}
+
+JsonObject* JsonValue::setToObject() {
+	auto* p = getObject();
+
+	if (p) return p;
+
+	setNull();
+	_type = EType::Object;
+	_value.object = new JsonObject();
+
+	return _value.object;
+}
+
+JsonArray* JsonValue::getArray() const {
+	if (_type != EType::Array)
+		return nullptr;
+	return _value.array;
+}
+
+void JsonValue::setArray(JsonArray* arr) {
+	setNull();
+	_type = EType::Array;
+	_value.array = arr;
+}
+
+JsonArray* JsonValue::setToArray() {
+	auto* p = getArray();
+	if (p) return p;
+
+	setNull();
+	_type = EType::Array;
+	_value.array = new JsonArray();
+
+	return _value.array;
+}
+
+JsonString* JsonValue::getString() const {
+	if (_type != EType::String)
+		return nullptr;
+	return _value.string;
+}
+
+void JsonValue::setString(const char* sz) {
+	auto* p = getString();
+
+	if (!p) {
+		setNull();
+		_type = EType::String;
+		_value.string = new JsonString();
+	}
+
+	*_value.string = sz;
+}
+
+void JsonParser::_addJsonObjectMember(JsonObject* obj) {
+	auto key = currentToken->value;
+	if (!tryAdvance(Token::Type::String))	throw MyError("parseObject failed");
+	if (!tryAdvance(Token::Type::Colon))	throw MyError("parseObject failed");
+	auto* v = parseValue();
+	if (!v) {
+		throw MyError("parseObject failed");
+	}
+	obj->emplace(key, v);
+}
+
+void JsonParser::_addJsonArrayElement(JsonArray* arr) {
+	auto* e = parseValue();
+	if (!e) throw MyError("parseArray failed");
+	arr->emplace_back(e);
+}
+
+bool JsonParser::tryAdvance(Token::Type expected_type) {
+	if (currentToken->type != expected_type)
+		return false;
+	//delete currentToken; // someone still holding its reference
+
+
+	currentToken = lexer->getNextToken();
+	return true;
+}
+
+JsonValue* JsonParser::parseArray(JsonArray* arr) {
+	auto b = tryAdvance(Token::Type::OpenBracket);
+	MY_ASSERT(b);
+
+	if (arr == nullptr) {
+		arr = new JsonArray();
+	}
+
+	_addJsonArrayElement(arr);
+
+
+	while (tryAdvance(Token::Type::Comma)) {
+		_addJsonArrayElement(arr);
+	}
+
+	if (tryAdvance(Token::Type::CloseBracket)) {
+		auto* v = new JsonValue();
+		v->setArray(arr);
+		return v;
+	}
+}
+
+JsonValue* JsonParser::parseObject(JsonObject* obj) {
+	auto b = tryAdvance(Token::Type::OpenBrace);
+	MY_ASSERT(b);
+
+	if (obj == nullptr) {
+		obj = new JsonObject();
+	}
+
+	_addJsonObjectMember(obj);
+
+	while (tryAdvance(Token::Type::Comma)) {
+		_addJsonObjectMember(obj);
+	}
+
+	if (tryAdvance(Token::Type::CloseBrace)) {
+		auto* v = new JsonValue();
+		v->setObject(obj);
+		return v;
+	}
+}
+
+JsonValue* JsonParser::parseValue() {
+
+	switch (currentToken->type)
+	{
+	case Token::Type::Eof:
+		return nullptr;
+
+	case Token::Type::Null: {
+		JsonValue* v = new JsonValue();
+		auto b = tryAdvance(Token::Type::Null);
+		MY_ASSERT(b);
+		v->setNull();
+		return v;
+	}
+
+	case Token::Type::Number: {
+		const auto& tv = currentToken->value;
+		MY_ASSERT(tryAdvance(Token::Type::Number));
+		JsonValue* v = new JsonValue();
+		v->setNumber(std::stod(tv));
+		return v;
+	}
+
+	case Token::Type::String: {
+
+		const auto& tv = currentToken->value;
+		MY_ASSERT(tryAdvance(Token::Type::String));
+
+		JsonValue* v = new JsonValue();
+		v->setString(tv.c_str());
+		return v;
+	} break;
+
+	case Token::Type::Boolean: {
+		const auto& tv = currentToken->value;
+		MY_ASSERT(tryAdvance(Token::Type::Boolean));
+		JsonValue* v = new JsonValue();
+		v->setBoolean(tv == "true");
+		return v;
+	} break;
+
+	case Token::Type::OpenBrace: {
+		return parseObject();
+	} break;
+
+	case Token::Type::OpenBracket: {
+		return parseArray();
+	}
+
+	default:
+		printf("parseValue failed: unknown Token %d, %s", currentToken->type, currentToken->value.c_str());
+		throw MyError("[ERR] parseValue failed");
+	}
+
+	return nullptr;
+}
+
 }// namespace CL
 
 int main()
@@ -434,14 +687,6 @@ int main()
 
 	//CL::ParserTests::test_parseArray();
 	CL::ParserTests::test_parseObject();
-
-
-
-
-
-
-
-
 	return 0;
 }
 
