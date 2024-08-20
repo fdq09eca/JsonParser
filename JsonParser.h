@@ -199,8 +199,19 @@ public:
 		currentToken = lexer->getNextToken();
 	}
 
+	~JsonParser()
+	{
+		delete lexer;
+		delete currentToken;
+
+	}
+
 	bool tryAdvance(Token::Type expected_type) {
-		if (currentToken->type != expected_type) return false;
+		if (currentToken->type != expected_type)
+			return false;
+		//delete currentToken; // someone still holding its reference
+
+
 		currentToken = lexer->getNextToken();
 		return true;
 	}

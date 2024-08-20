@@ -82,7 +82,8 @@ Token* Tokenizer::getNextToken() {
 
 	case 'n': return getNull();
 	case '"': return getString();
-	case 't': case 'f': return getBoolean();
+	case 't':
+	case 'f': return getBoolean();
 
 	default: {
 
