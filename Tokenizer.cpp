@@ -5,17 +5,23 @@ bool Tokenizer::isEnd() const {
 	MY_ASSERT(c != nullptr);
 	return *c == '\0';
 }
-bool Tokenizer::peek(const char* cmp_str) const {
-	MY_ASSERT(c != nullptr && cmp_str != nullptr);
-	return 0 == strncmp(c, cmp_str, strlen(cmp_str));
-}
 
-void Tokenizer::advance(size_t n) {
-	MY_ASSERT(c != nullptr && src != nullptr && dst != nullptr);
 
-	if (c >= src && c < dst) {
-		c += n;
-		return;
+char Tokenizer::nextChar(size_t n) {
+	MY_ASSERT(_c != nullptr && _src != nullptr && _dst != nullptr);
+
+	if (_c >= _src && _c < _dst) {
+		_c++;
+		
+		if (*_c == '\n') {
+			_lineNumber++;
+			_columnNumber = 1;
+		}
+		else {
+			_columnNumber++;
+		}
+		
+		return *_c;
 	}
 	throw MyError("Tokenizer::advance() out of range");
 }
@@ -179,5 +185,7 @@ Token* Tokenizer::getBoolean()
 
 	return t;
 }
+
+
 
 } // namespace CL

@@ -6,12 +6,12 @@ namespace CL
 {
 class JsonValue;
 using JsonString = String;
-using JsonArray = Vector<JsonValue*>;		// why not const ref?
-using JsonObject = Map<String, JsonValue*>;	// why not const ref?
+using JsonArray = Vector<JsonValue>;		
+using JsonObject = Map<String, JsonValue>;	
 using JsonNumber = f64;
 using JsonBoolean = bool;
 
-class JsonValue {
+class JsonValue : NonCopyable {
 
 public:
 	enum class EType
@@ -40,40 +40,52 @@ private:
 
 
 public:
-	~JsonValue();
+	~JsonValue();;
+
+
+
+	JsonValue(JsonValue&& rhs) {
+		operator=(std::move(rhs));
+	}
+
+	JsonValue& operator=(JsonValue&& rhs) {
+		if (this != &rhs) {
+			setNull();
+			_type = rhs._type;
+			_value = rhs._value;
+
+			rhs._type = EType::Undefined;
+		}
+		return *this;
+	}
+
 
 	EType getType() const;
 
-	bool getBoolean() const;
 
 	bool isNull() const;
-
-	bool isUndefined() const;
-
 	void setNull();
 
-	JsonNumber getNumber() const;
+	bool isUndefined() const;
+	void setUndefined();
 
-	void setNumber(JsonNumber n);
+	JsonNumber  getNumber() const;
+	void		setNumber(JsonNumber n);
 
-	void setBoolean(JsonBoolean b);
-
+	bool		getBoolean() const;
+	void		setBoolean(bool b);
 
 	JsonObject* getObject() const;
-
-	void setObject(JsonObject* obj);
-
 	JsonObject* setToObject();
+	void		setObject(JsonObject* obj);
 
 	JsonArray* getArray() const;
-
-	void setArray(JsonArray* arr);
-
 	JsonArray* setToArray();
+	void		setArray(JsonArray* arr);
 
 	JsonString* getString() const;
+	void		setString(const char* sz);
 
-	void setString(const char* sz);
 }; // class JsonValue
 
 class JsonParser {
@@ -91,7 +103,7 @@ private:
 public:
 	JsonParser(const char* sz) {
 		lexer = new Lexer(sz);
-		currentToken = lexer->getNextToken();
+		currentToken = lexer->nextToken();
 	}
 
 	~JsonParser()

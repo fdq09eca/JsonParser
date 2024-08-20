@@ -421,6 +421,28 @@ JsonValue::~JsonValue()
 	setNull();
 }
 
+void JsonValue::setUndefined() {
+	switch (_type)
+	{
+	case JsonValue::EType::String:
+		delete _value.string;
+		break;
+	case JsonValue::EType::Array:
+		delete _value.array;
+		break;
+	case JsonValue::EType::Object:
+		delete _value.object;
+		break;
+	default:
+		break;
+	}
+	_type = EType::Undefined;
+}
+
+JsonValue::~JsonValue() {
+	setUndefined();
+}
+
 JsonValue::EType JsonValue::getType() const {
 	return _type;
 }
@@ -438,20 +460,7 @@ bool JsonValue::isUndefined() const {
 }
 
 void JsonValue::setNull() {
-	switch (_type)
-	{
-	case JsonValue::EType::String:
-		delete _value.string;
-		break;
-	case JsonValue::EType::Array:
-		delete _value.array;
-		break;
-	case JsonValue::EType::Object:
-		delete _value.object;
-		break;
-	default:
-		break;
-	}
+	setUndefined();
 	_type = EType::Null;
 }
 
