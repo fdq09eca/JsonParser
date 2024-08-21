@@ -19,15 +19,15 @@ private:
 	void _addJsonArrayElement(JsonArray* arr);
 
 public:
-	JsonParser(const char* sz) : lexer(sz) {
-
+	inline JsonParser(const char* sz) : lexer(sz) {
+		lexer.nextToken();
 	}
 
-	const Token& token() const {
+	inline const Token& token() const {
 		return lexer.token();
 	}
 
-	bool tryAdvance(Token::Type expected_type);
+	inline bool nextToken() { return lexer.nextToken(); }
 
 	JsonValue* parseArray(JsonArray* arr = nullptr);
 

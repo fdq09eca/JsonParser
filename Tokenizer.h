@@ -4,14 +4,16 @@ namespace CL {
 
 struct Token {
 	enum class Type {
+		Undefined,		 // undefined		[x]
 		Null,			 // null			[x] None
-		Identifier,      // id				[x] // true, false
+		Identifier,      // id				[x] true, false
 		Number,			 // 0 - 9			[x] 
 		String,			 // "Hello, World!"	[x]
 		Op,				 // [ ] { } : ,		[x]
+		Eof,			 // end of file		[x]
 	};
 
-	Type type = Type::Null;
+	Type type = Type::Undefined;
 	String str;
 
 	inline void print() const {

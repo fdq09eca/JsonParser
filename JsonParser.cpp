@@ -3,7 +3,7 @@
 
 #include <iostream>
 #include "JsonParser.h"
-#include "Tokenizer.h"
+
 
 namespace CL
 {
@@ -24,21 +24,7 @@ void JsonParser::_addJsonObjectMember(JsonObject* obj) {
 	obj->emplace(key, v);
 }
 
-void JsonParser::_addJsonArrayElement(JsonArray* arr) {
-	auto* e = parseValue();
-	if (!e) throw MyError("parseArray failed");
-	arr->emplace_back(e);
-}
 
-bool JsonParser::tryAdvance(Token::Type expected_type) {
-	if (currentToken->type != expected_type)
-		return false;
-	//delete currentToken; // someone still holding its reference
-
-
-	currentToken = lexer->nextToken();
-	return true;
-}
 
 JsonValue* JsonParser::parseArray(JsonArray* arr) {
 	auto b = tryAdvance(Token::Type::OpenBracket);
@@ -83,64 +69,145 @@ JsonValue* JsonParser::parseObject(JsonObject* obj) {
 	}
 }
 
-JsonValue* JsonParser::parseValue() {
 
-	switch (currentToken->type)
+#endif
+
+
+
+
+
+
+JsonValue* JsonParser::parseValue() {
+	
+	switch (token().type)
 	{
 	case Token::Type::Eof:
 		return nullptr;
 
 	case Token::Type::Null: {
 		JsonValue* v = new JsonValue();
-		auto b = tryAdvance(Token::Type::Null);
-		MY_ASSERT(b);
 		v->setNull();
+		nextToken();
 		return v;
 	}
 
 	case Token::Type::Number: {
-		const auto& tv = currentToken->value;
-		MY_ASSERT(tryAdvance(Token::Type::Number));
+		double d{};
+		lexer.readValue(d);
+
 		JsonValue* v = new JsonValue();
-		v->setNumber(std::stod(tv));
+		v->setNumber(d);
+		nextToken();
+
 		return v;
 	}
 
 	case Token::Type::String: {
-
-		const auto& tv = currentToken->value;
-		MY_ASSERT(tryAdvance(Token::Type::String));
-
 		JsonValue* v = new JsonValue();
-		v->setString(tv.c_str());
+		auto* s = v->setToString();
+		lexer.readValue(*s);
+		nextToken();
+
 		return v;
 	} break;
 
-	case Token::Type::Boolean: {
-		const auto& tv = currentToken->value;
-		MY_ASSERT(tryAdvance(Token::Type::Boolean));
-		JsonValue* v = new JsonValue();
-		v->setBoolean(tv == "true");
-		return v;
+	case Token::Type::Identifier: {
+
+		if (lexer.isBool()) {
+			JsonValue* v = new JsonValue();
+			bool b = false;
+			lexer.readValue(b);
+			v->setBoolean(b);
+			nextToken();
+			return v;
+		}
+
 	} break;
 
-	case Token::Type::OpenBrace: {
-		return parseObject();
-	} break;
-
-	case Token::Type::OpenBracket: {
-		return parseArray();
+	case Token::Type::Op: {
+		if		(lexer.isOp("[")) return parseArray();
+		else if (lexer.isOp("{")) return parseObject();
 	}
 
 	default:
-		printf("parseValue failed: unknown Token %d, %s", currentToken->type, currentToken->value.c_str());
+		printf("parseValue failed: unknown Token %d, %s", token().type, token().str.c_str());
 		throw MyError("[ERR] parseValue failed");
 	}
 
 	return nullptr;
 }
-#endif
 
+void JsonParser::_addJsonArrayElement(JsonArray* arr) {
+	auto* e = parseValue();
+	if (!e) throw MyError("parseArray failed");
+	arr->emplace_back(std::move(*e)); // JsonValue copy!!
+}
+
+JsonValue* JsonParser::parseArray(JsonArray* arr) {
+	if (lexer.isOp("[") && lexer.nextToken()) {
+		if (arr == nullptr) {
+			arr = new JsonArray();
+		}
+		_addJsonArrayElement(arr);
+	}
+	else {
+		throw MyError("parseArray failed");
+	}
+	
+	while (lexer.nextToken() && lexer.isOp(",")) {
+		_addJsonArrayElement(arr);	
+	}
+
+	if (lexer.isOp("]")) {
+		auto* v = new JsonValue();
+		v->setArray(arr);
+		lexer.nextToken();
+		return v;
+	}
+	else 
+	{
+		throw MyError("parseArray failed");
+	}
+}
+
+void JsonParser::_addJsonObjectMember(JsonObject* obj) {
+	if (!lexer.isString()) throw MyError("parseObject failed");
+	String key;
+	lexer.readValue(key);
+	
+	if (lexer.nextToken() && lexer.isOp(":")) {
+		lexer.nextToken();
+		auto v = parseValue();
+		if (!v) throw MyError("parseObject failed");
+		obj->emplace(key, std::move(*v));
+	}
+	else 
+	{
+		throw MyError("parseObject failed");
+	}
+}
+
+JsonValue* JsonParser::parseObject(JsonObject* obj) {
+	if (lexer.isOp("{") && lexer.nextToken() && lexer.isString()) {
+		_addJsonObjectMember(obj);
+	}
+	
+	while (lexer.nextToken() && lexer.isOp(",")) {
+		_addJsonObjectMember(obj);
+	}
+
+	if (lexer.isOp("}")) {
+		auto* v = new JsonValue();
+		v->setObject(obj);
+		return v;
+	} 
+	else 
+	{
+		throw MyError("parseObject failed");
+	}
+
+	return nullptr;
+}
 } // namespace CL
 
 

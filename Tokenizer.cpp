@@ -115,7 +115,10 @@ bool Tokenizer::nextToken() {
 	switch (*_c)
 	{
 
-	case '\0': return false;
+	case '\0':
+		_token.type = Token::Type::Eof;
+		_token.str = *_c;
+		return false;
 
 	case '[': case ',': case ']':
 	case '{': case ':': case '}':
@@ -273,5 +276,6 @@ void Tokenizer::readValue(bool& outValue) {
 	else if (isIdentifier("false")) outValue = false;
 	else							throw MyError("readValue(bool) failed");
 }
+
 
 } // namespace CL

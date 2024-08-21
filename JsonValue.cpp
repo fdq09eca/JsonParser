@@ -86,6 +86,8 @@ void JsonValue::setNumber(JsonNumber n) {
 	_value.number = n;
 }
 
+
+
 JsonObject* JsonValue::getObject() const {
 	if (_type != EType::Object)
 		return nullptr;
@@ -139,15 +141,19 @@ JsonString* JsonValue::getString() const {
 	return _value.string;
 }
 
-void JsonValue::setString(const char* sz) {
+JsonString* JsonValue::setToString() {
 	auto* p = getString();
+	if (p) return p;
 
-	if (!p) {
-		setNull();
-		_type = EType::String;
-		_value.string = new JsonString();
-	}
+	setNull();
+	_type = EType::String;
+	_value.string = new JsonString();
 
-	*_value.string = sz;
+	return _value.string;
+}
+
+void JsonValue::setString(const char* sz) {
+	auto* s = setToString();
+	if (sz) *s = sz;
 }
 } // namespace CL

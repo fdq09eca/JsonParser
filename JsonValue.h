@@ -35,11 +35,13 @@ private:
 	};
 
 	EType _type = EType::Undefined;
-	Value _value;
+	Value _value{};
 
 
 public:
-	~JsonValue();;
+	JsonValue() = default;
+
+	~JsonValue();
 
 	JsonValue(JsonValue&& rhs) noexcept;
 
@@ -58,19 +60,21 @@ public:
 	JsonNumber  getNumber() const;
 	void		setNumber(JsonNumber n);
 
-	bool		getBoolean() const;
-	void		setBoolean(bool b);
 
+	void		setBoolean(bool b);
+	bool		getBoolean() const;
+
+	void		setObject(JsonObject* obj);
 	JsonObject* getObject() const;
 	JsonObject* setToObject();
-	void		setObject(JsonObject* obj);
 
+	void	   setArray(JsonArray* arr);
 	JsonArray* getArray() const;
 	JsonArray* setToArray();
-	void		setArray(JsonArray* arr);
 
 	JsonString* getString() const;
 	void		setString(const char* sz);
+	JsonString* setToString();
 
 }; // class JsonValue
 
