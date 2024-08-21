@@ -8,8 +8,7 @@ struct Token {
 		Identifier,      // id				[x] // true, false
 		Number,			 // 0 - 9			[x] 
 		String,			 // "Hello, World!"	[x]
-		Op,
-		Eof,		     // EOF				[x]
+		Op,				 // [ ] { } : ,		[x]
 	};
 
 	Type type = Type::Null;
@@ -45,30 +44,41 @@ public:
 
 	~Tokenizer();
 
-	char nextChar();
+	const Token& token() const;;
 
+	char nextChar();
 	bool nextToken();
 
-	bool isEquals(Type t, const char* sz) const;
 
 	bool isType(Type t) const;
+	bool isEquals(Type t, const char* sz) const;
+
+	bool isNull() const;
+
+	bool isBool() const;
+	bool isBool(const char* sz) const;
+
+	bool isString() const;
+	bool isString(const char* sz) const;
 
 	bool isNumber() const;
+	bool isNumber(const char* sz) const;
 
+	bool isOp() const;
 	bool isOp(const char* sz) const;
 
+	bool isIdentifier() const;
 	bool isIdentifier(const char* sz) const;
 
 	void readValue(double& outValue);
-
 	void readValue(String& outValue);
-
 	void readValue(bool& outValue);
 
 	bool isEnd() const;
 
 	void skipSpaces();
 };
+
 
 
 } // namespace CL

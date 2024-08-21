@@ -6,7 +6,6 @@ bool Tokenizer::isEnd() const {
 	return (*_c == '\0');
 }
 
-
 Tokenizer::Tokenizer(const char* sz) : _c(sz), _src(sz) {
 	if (_c) {
 		_dst = _c + strlen(_c);
@@ -20,8 +19,15 @@ Tokenizer::~Tokenizer() {
 	_reset();
 }
 
+const Token& Tokenizer::token() const {
+	return _token;
+}
+
 char Tokenizer::nextChar() {
-	MY_ASSERT(_c != nullptr && _src != nullptr && _dst != nullptr && _dst > _src);
+	MY_ASSERT(_c != nullptr
+		&& _src != nullptr
+		&& _dst != nullptr
+		&& _dst > _src);
 
 	if (_c >= _src && _c < _dst) {
 		_c++;
@@ -56,18 +62,21 @@ bool Tokenizer::nextToken() {
 
 		if (*_c == '-') {
 			nextChar();
-			if (!isdigit(*_c)) throw MyError("Tokenizer::nextToken() Invalid number.");
-
+			if (!isdigit(*_c))
+				throw MyError("[ERR] Tokenizer::nextToken() Invalid number.");
 		}
 
 		if (*_c == '0') {
 			nextChar();
-			if (isdigit(*_c)) throw MyError("Tokenizer::nextToken() Invalid number.");
+			if (isdigit(*_c))
+				throw MyError("[ERR] Tokenizer::nextToken() Invalid number.");
 		}
 
 		else
 		{
-			if (!isdigit(*_c)) throw MyError("Tokenizer::nextToken() Invalid number.");
+			if (!isdigit(*_c))
+				throw MyError("[ERR] Tokenizer::nextToken() Invalid number.");
+
 			while (isdigit(*_c)) {
 				nextChar();
 			}
@@ -75,18 +84,21 @@ bool Tokenizer::nextToken() {
 
 		if (*_c == '.') {
 			nextChar();
-			if (!isdigit(*_c)) throw MyError("Tokenizer::nextToken() Invalid number.");
+			if (!isdigit(*_c))
+				throw MyError("[ERR] Tokenizer::nextToken() Invalid number.");
+
 			while (isdigit(*_c)) {
 				nextChar();
 			}
 		}
 
 		if (*_c == 'e' || *_c == 'E') {
+
 			nextChar();
+			if (*_c == '+' || *_c == '-')
+				nextChar();
 
-
-			if (*_c == '+' || *_c == '-') nextChar();
-			if (!isdigit(*_c)) throw MyError("Tokenizer::nextToken() Invalid number.");
+			if (!isdigit(*_c)) throw MyError("[ERR] Tokenizer::nextToken() Invalid number.");
 
 			while (isdigit(*_c)) {
 				nextChar();
@@ -103,11 +115,7 @@ bool Tokenizer::nextToken() {
 	switch (*_c)
 	{
 
-	case '\0': {
-		_token.type = Token::Type::Eof;
-		_token.str = *_c;
-		return false;
-	}
+	case '\0': return false;
 
 	case '[': case ',': case ']':
 	case '{': case ':': case '}':
@@ -120,31 +128,31 @@ bool Tokenizer::nextToken() {
 
 	case '"': {
 		nextChar(); // skip open '"'
+
 		auto* p = _c;
 
 		while (true) {
 
 			if (isEnd()) throw MyError("getString failed");
 
-			if (*_c == '"') {
-				if (*(_c - 1) != '\\') // not skip escaped character
-				{
-					_token.type = Token::Type::String;
-					_token.str.assign(p, _c - p);
-					nextChar(); // skip close '"'
-					return true;
-				}
+			if (*_c == '"' && *(_c - 1) != '\\') {
+
+				_token.type = Token::Type::String;
+				_token.str.assign(p, _c - p);
+				nextChar(); // skip close '"'
+				return true;
 			}
+
 			nextChar();
 		}
 	}
 
 
 	case 'n': {
-		if (0 == strcmp(_c, "null")) {
+		if (0 == strncmp(_c, "null", 4)) {
 			_token.type = Token::Type::Null;
 			_token.str = "null";
-			for (int i = 0; i < _token.str.length(); i++) nextChar();
+			for (int i = 0; i < 4; i++) nextChar();
 			return true;
 		}
 		else {
@@ -155,16 +163,16 @@ bool Tokenizer::nextToken() {
 
 	case 't':
 	case 'f': {
-		if (0 == strcmp(_c, "true")) {
+		if (0 == strncmp(_c, "true", 4)) {
 			_token.type = Token::Type::Identifier;
 			_token.str = "true";
-			for (int i = 0; i < _token.str.length(); i++) nextChar();
+			for (int i = 0; i < 4; i++) nextChar();
 			return true;
 		}
-		else if (0 == strcmp(_c, "false")) {
+		else if (0 == strncmp(_c, "false", 5)) {
 			_token.type = Token::Type::Identifier;
 			_token.str = "false";
-			for (int i = 0; i < _token.str.length(); i++) nextChar();
+			for (int i = 0; i < 5; i++) nextChar();
 			return true;
 		}
 		else {
@@ -186,17 +194,56 @@ bool Tokenizer::isEquals(Type t, const char* sz) const {
 	return isType(t) && 0 == strcmp(_token.str.c_str(), sz);
 }
 
+bool Tokenizer::isNull() const
+{
+	return isEquals(Type::Null, "null");
+}
+
+bool Tokenizer::isBool() const
+{
+	return isIdentifier("true") || isIdentifier("false");
+}
+
+bool Tokenizer::isBool(const char* sz) const
+{
+	return isBool() && 0 == strcmp(_token.str.c_str(), sz);
+}
+
 bool Tokenizer::isType(Type t) const {
 	return _token.type == t;
+}
+
+bool Tokenizer::isString() const
+{
+	return isType(Type::String);
+}
+
+bool Tokenizer::isString(const char* sz) const
+{
+	return isEquals(Type::String, sz);
 }
 
 bool Tokenizer::isNumber() const {
 	return isType(Type::Number);
 }
 
+bool Tokenizer::isNumber(const char* sz) const {
+	return isEquals(Type::Number, sz);
+}
+
+bool Tokenizer::isOp() const {
+	return isType(Type::Op);
+}
+
 bool Tokenizer::isOp(const char* sz) const {
 	return isEquals(Type::Op, sz);
 }
+
+bool Tokenizer::isIdentifier() const
+{
+	return isType(Type::Identifier);
+}
+
 
 bool Tokenizer::isIdentifier(const char* sz) const {
 	return isEquals(Type::Identifier, sz);
@@ -207,7 +254,7 @@ void Tokenizer::readValue(double& outValue) {
 	if (!isNumber())		throw MyError("readValue(double) failed");
 	if (_token.str.empty()) throw MyError("readValue(double) failed");
 
-	
+
 	if (1 != sscanf_s(_token.str.c_str(), "%lf", &outValue))
 		throw MyError("readValue failed");
 }
