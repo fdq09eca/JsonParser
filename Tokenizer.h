@@ -4,8 +4,8 @@ namespace CL {
 
 struct Token {
 	enum class Type {
-		Null,			 // null				[x] None
-		Identifier,      // id				[x]
+		Null,			 // null			[x] None
+		Identifier,      // id				[x] // true, false
 		Number,			 // 0 - 9			[x] 
 		String,			 // "Hello, World!"	[x]
 		Op,
@@ -25,9 +25,11 @@ class Tokenizer
 	const char* _c = nullptr;
 	const char* _src = nullptr;
 	const char* _dst = nullptr;
+
 	size_t		_lineNumber = 1;
 	size_t		_columnNumber = 1;
 
+	using Type = Token::Type;
 	Token _token;
 
 	void _reset() {
@@ -39,66 +41,33 @@ class Tokenizer
 public:
 	Tokenizer() = default;
 
-	Tokenizer(const char* sz) : _c(sz), _src(sz) {
-		if (_c) {
-			_dst = _c + strlen(_c);
-		}
-	}
+	Tokenizer(const char* sz);
 
-	~Tokenizer() {
-		_reset();
-	}
+	~Tokenizer();
 
 	char nextChar();
 
 	bool nextToken();
 
-	using Type = Token::Type;
+	bool isEquals(Type t, const char* sz) const;
 
-	bool isEquals(Type t, const char* sz) const {
-		return _token.type == t && 0 == strcmp(_token.str.c_str(), sz);
-	}
+	bool isType(Type t) const;
 
-	bool isNumber() const { return _token.type == Token::Type::Number; };
+	bool isNumber() const;
 
-	bool isOp(const char* sz) const {
-		return isEquals(Type::Op, sz);
-	}
+	bool isOp(const char* sz) const;
 
-	bool isIdentifier(const char* sz) const {
-		return isEquals(Type::Identifier, sz);
-	}
+	bool isIdentifier(const char* sz) const;
 
-	bool isString(const char* sz) const {
-		return isEquals(Type::String, sz);
-	}
+	void readValue(double& outValue);
 
+	void readValue(String& outValue);
 
-	void readValue(int& outValue) {
-		if (!isNumber()) {
-			throw MyError("readValue failed");
-		}
-
-		if (_token.str.empty()) {
-			throw MyError("readValue failed");
-		}
-
-		if (1 != sscanf(_token.str.c_str(), "%d", &outValue)) {
-			throw MyError("readValue failed");
-		}
-
-		nextToken();
-	};
-
-
-
+	void readValue(bool& outValue);
 
 	bool isEnd() const;
 
-	CL::Token* advanceAndGetToken(Token::Type type, size_t n = 1);
-
 	void skipSpaces();
-
 };
 
 

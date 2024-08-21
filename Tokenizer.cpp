@@ -2,17 +2,30 @@
 namespace CL {
 
 bool Tokenizer::isEnd() const {
-	MY_ASSERT(c != nullptr);
-	return *c == '\0';
+	MY_ASSERT(_c != nullptr);
+	return (*_c == '\0');
 }
 
 
-char Tokenizer::nextChar(size_t n) {
-	MY_ASSERT(_c != nullptr && _src != nullptr && _dst != nullptr);
+Tokenizer::Tokenizer(const char* sz) : _c(sz), _src(sz) {
+	if (_c) {
+		_dst = _c + strlen(_c);
+	}
+	else {
+		throw MyError("Tokenizer(const char* sz)");
+	}
+}
+
+Tokenizer::~Tokenizer() {
+	_reset();
+}
+
+char Tokenizer::nextChar() {
+	MY_ASSERT(_c != nullptr && _src != nullptr && _dst != nullptr && _dst > _src);
 
 	if (_c >= _src && _c < _dst) {
 		_c++;
-		
+
 		if (*_c == '\n') {
 			_lineNumber++;
 			_columnNumber = 1;
@@ -20,172 +33,198 @@ char Tokenizer::nextChar(size_t n) {
 		else {
 			_columnNumber++;
 		}
-		
+
 		return *_c;
 	}
-	throw MyError("Tokenizer::advance() out of range");
+	throw MyError("Tokenizer::nextChar() out of range");
 }
 
 void Tokenizer::skipSpaces() {
-	while (isspace(*c)) {
-		advance();
+	while (!isEnd() && isspace(*_c)) {
+		nextChar();
 	}
 }
 
-Token* Tokenizer::getNull() {
-	if (peek("null")) {
-		Token* t = new Token();
-		t->type = Token::Type::Null;
-		t->value = "null";
-		advance(4);
-		return t;
-	}
-	throw MyError("getNull failed");
-}
-
-Token* Tokenizer::getString() {
-	advance();
-	auto* p = c;
-
-	while (c) {
-		if (isEnd()) throw MyError("getString failed");
-
-
-		if (*c == '"') {
-			if (*(c - 1) != '\\') // not skip escaped character
-			{
-				auto* t = new Token(Token::Type::String, String(p, c - p));
-				advance();
-				return t;
-			}
-		}
-		advance();
-	}
-}
-
-Token* Tokenizer::getNextToken() {
-
-
+bool Tokenizer::nextToken() {
 
 	skipSpaces();
 
-	if (*c == '-' || isdigit(*c)) {
-		return getNumber();
+	// number
+	if (*_c == '-' || isdigit(*_c)) {
+
+		auto* p = _c;
+
+		if (*_c == '-') {
+			nextChar();
+			if (!isdigit(*_c)) throw MyError("Tokenizer::nextToken() Invalid number.");
+
+		}
+
+		if (*_c == '0') {
+			nextChar();
+			if (isdigit(*_c)) throw MyError("Tokenizer::nextToken() Invalid number.");
+		}
+
+		else
+		{
+			if (!isdigit(*_c)) throw MyError("Tokenizer::nextToken() Invalid number.");
+			while (isdigit(*_c)) {
+				nextChar();
+			}
+		}
+
+		if (*_c == '.') {
+			nextChar();
+			if (!isdigit(*_c)) throw MyError("Tokenizer::nextToken() Invalid number.");
+			while (isdigit(*_c)) {
+				nextChar();
+			}
+		}
+
+		if (*_c == 'e' || *_c == 'E') {
+			nextChar();
+
+
+			if (*_c == '+' || *_c == '-') nextChar();
+			if (!isdigit(*_c)) throw MyError("Tokenizer::nextToken() Invalid number.");
+
+			while (isdigit(*_c)) {
+				nextChar();
+			}
+		}
+
+		_token.type = Token::Type::Number;
+		_token.str.assign(p, _c - p);
+
+		return true;
 	}
 
 
-	switch (*c)
+	switch (*_c)
 	{
 
-	case '\0': return advanceAndGetToken(Token::Type::Eof);
-	case '[': return advanceAndGetToken(Token::Type::OpenBracket);
-	case ',': return advanceAndGetToken(Token::Type::Comma);
-	case ']': return advanceAndGetToken(Token::Type::CloseBracket);
+	case '\0': {
+		_token.type = Token::Type::Eof;
+		_token.str = *_c;
+		return false;
+	}
 
-	case '{': return advanceAndGetToken(Token::Type::OpenBrace);
-	case ':': return advanceAndGetToken(Token::Type::Colon);
-	case '}': return advanceAndGetToken(Token::Type::CloseBrace);
+	case '[': case ',': case ']':
+	case '{': case ':': case '}':
+	{
+		_token.type = Token::Type::Op;
+		_token.str = *_c;
+		nextChar();
+		return true;
+	}
 
-	case 'n': return getNull();
-	case '"': return getString();
+	case '"': {
+		nextChar(); // skip open '"'
+		auto* p = _c;
+
+		while (true) {
+
+			if (isEnd()) throw MyError("getString failed");
+
+			if (*_c == '"') {
+				if (*(_c - 1) != '\\') // not skip escaped character
+				{
+					_token.type = Token::Type::String;
+					_token.str.assign(p, _c - p);
+					nextChar(); // skip close '"'
+					return true;
+				}
+			}
+			nextChar();
+		}
+	}
+
+
+	case 'n': {
+		if (0 == strcmp(_c, "null")) {
+			_token.type = Token::Type::Null;
+			_token.str = "null";
+			for (int i = 0; i < _token.str.length(); i++) nextChar();
+			return true;
+		}
+		else {
+			throw MyError("[ERR] unknown Identifier");
+			return false;
+		}
+	}
+
 	case 't':
-	case 'f': return getBoolean();
+	case 'f': {
+		if (0 == strcmp(_c, "true")) {
+			_token.type = Token::Type::Identifier;
+			_token.str = "true";
+			for (int i = 0; i < _token.str.length(); i++) nextChar();
+			return true;
+		}
+		else if (0 == strcmp(_c, "false")) {
+			_token.type = Token::Type::Identifier;
+			_token.str = "false";
+			for (int i = 0; i < _token.str.length(); i++) nextChar();
+			return true;
+		}
+		else {
+			throw MyError("[ERR] unknown Identifier");
+			return false;
+		}
+	}
 
 	default: {
-
-		printf("getNextToken failed: unknown Token %c", *c);
-		throw MyError("getNextToken failed");
-	} break;
+		throw MyError("nextToken failed");
+	}
 
 	}
 
-	return nullptr;
+	return false;
 }
 
-CL::Token* Tokenizer::advanceAndGetToken(Token::Type type, size_t n)
-{
-	if (!c) {
-		throw MyError("advanceAndGetToken failed");
-	}
-
-	auto* t = new Token(type, { *c });
-
-	if (*c != '\0')
-		advance(n);
-	return t;
+bool Tokenizer::isEquals(Type t, const char* sz) const {
+	return isType(t) && 0 == strcmp(_token.str.c_str(), sz);
 }
 
-CL::Token* Tokenizer::getNumber()
-{
-	if (c == nullptr || *c == '\0')
-		return nullptr;
-
-	auto* p = c;
-
-
-	if (*c == '-') {
-		advance();
-		if (!isdigit(*c)) throw MyError("Invalid number.");
-
-	}
-
-	if (*c == '0') {
-		advance();
-		if (isdigit(*c)) throw MyError("Invalid number.");
-
-	}
-	else {
-		if (!isdigit(*c)) throw MyError("Invalid number.");
-		while (isdigit(*c)) {
-			advance();
-		}
-	}
-
-	if (*c == '.') {
-		advance();
-		if (!isdigit(*c)) throw MyError("Invalid number.");
-		while (isdigit(*c)) {
-			advance();
-		}
-	}
-
-	if (*c == 'e' || *c == 'E') {
-		advance();
-
-		if (*c == '+' || *c == '-') advance();
-		if (!isdigit(*c)) throw MyError("Invalid number.");
-
-		while (isdigit(*c)) {
-			advance();
-		}
-	}
-
-	return new Token(Token::Type::Number, String(p, c - p));
+bool Tokenizer::isType(Type t) const {
+	return _token.type == t;
 }
 
-Token* Tokenizer::getBoolean()
-{
-	const char* b = nullptr;
-
-	if (peek("true"))
-	{
-		b = "true";
-	}
-	else if (peek("false"))
-	{
-		b = "false";
-	}
-	else
-	{
-		throw MyError("getBoolean failed.");
-	}
-
-	Token* t = new Token(Token::Type::Boolean, b);
-	advance(t->value.length());
-
-	return t;
+bool Tokenizer::isNumber() const {
+	return isType(Type::Number);
 }
 
+bool Tokenizer::isOp(const char* sz) const {
+	return isEquals(Type::Op, sz);
+}
 
+bool Tokenizer::isIdentifier(const char* sz) const {
+	return isEquals(Type::Identifier, sz);
+}
+
+void Tokenizer::readValue(double& outValue) {
+
+	if (!isNumber())		throw MyError("readValue(double) failed");
+	if (_token.str.empty()) throw MyError("readValue(double) failed");
+
+	
+	if (1 != sscanf_s(_token.str.c_str(), "%lf", &outValue))
+		throw MyError("readValue failed");
+}
+
+void Tokenizer::readValue(String& outValue) {
+
+	if (!isType(Type::String))	throw MyError("readValue(String) failed");
+	if (_token.str.empty())		throw MyError("readValue(String) failed");
+
+	outValue = _token.str;
+}
+
+void Tokenizer::readValue(bool& outValue) {
+
+	if (isIdentifier("true"))		outValue = true;
+	else if (isIdentifier("false")) outValue = false;
+	else							throw MyError("readValue(bool) failed");
+}
 
 } // namespace CL
