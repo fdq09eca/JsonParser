@@ -7,6 +7,7 @@ int main()
 
 	CL::TokenizerTests::test_getNumber();
 	CL::TokenizerTests::test_nextToken();
+	CL::ParserTests::test_parseObject();
 	return 0;
 }
 

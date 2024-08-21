@@ -1,6 +1,18 @@
 #pragma once
-#include "Tokenizer.h"
+#include "JsonParser.h"
+
 namespace CL {
+
+class ParserTests
+{
+public:
+	static void test_parseObject() {
+		JsonParser p("{ \"key1\" : [null, true, false, 123] }");
+		auto obj = p.parseObject();
+		TEST(obj != nullptr);
+		TEST(obj->getType() == JsonValue::EType::Object);
+	}
+};
 
 class TokenizerTests {
 	static void _getNumber(const char* v) { // TODO: pls teach me how to use marco and print out the v value

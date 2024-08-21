@@ -8,75 +8,6 @@
 namespace CL
 {
 
-
-#if 0
-
-
-
-void JsonParser::_addJsonObjectMember(JsonObject* obj) {
-	auto key = currentToken->value;
-	if (!tryAdvance(Token::Type::String))	throw MyError("parseObject failed");
-	if (!tryAdvance(Token::Type::Colon))	throw MyError("parseObject failed");
-	auto* v = parseValue();
-	if (!v) {
-		throw MyError("parseObject failed");
-	}
-	obj->emplace(key, v);
-}
-
-
-
-JsonValue* JsonParser::parseArray(JsonArray* arr) {
-	auto b = tryAdvance(Token::Type::OpenBracket);
-	MY_ASSERT(b);
-
-	if (arr == nullptr) {
-		arr = new JsonArray();
-	}
-
-	_addJsonArrayElement(arr);
-
-
-	while (tryAdvance(Token::Type::Comma)) {
-		_addJsonArrayElement(arr);
-	}
-
-	if (tryAdvance(Token::Type::CloseBracket)) {
-		auto* v = new JsonValue();
-		v->setArray(arr);
-		return v;
-	}
-}
-
-JsonValue* JsonParser::parseObject(JsonObject* obj) {
-	auto b = tryAdvance(Token::Type::OpenBrace);
-	MY_ASSERT(b);
-
-	if (obj == nullptr) {
-		obj = new JsonObject();
-	}
-
-	_addJsonObjectMember(obj);
-
-	while (tryAdvance(Token::Type::Comma)) {
-		_addJsonObjectMember(obj);
-	}
-
-	if (tryAdvance(Token::Type::CloseBrace)) {
-		auto* v = new JsonValue();
-		v->setObject(obj);
-		return v;
-	}
-}
-
-
-#endif
-
-
-
-
-
-
 JsonValue* JsonParser::parseValue() {
 	
 	switch (token().type)
@@ -87,7 +18,6 @@ JsonValue* JsonParser::parseValue() {
 	case Token::Type::Null: {
 		JsonValue* v = new JsonValue();
 		v->setNull();
-		nextToken();
 		return v;
 	}
 
@@ -97,7 +27,6 @@ JsonValue* JsonParser::parseValue() {
 
 		JsonValue* v = new JsonValue();
 		v->setNumber(d);
-		nextToken();
 
 		return v;
 	}
@@ -106,8 +35,6 @@ JsonValue* JsonParser::parseValue() {
 		JsonValue* v = new JsonValue();
 		auto* s = v->setToString();
 		lexer.readValue(*s);
-		nextToken();
-
 		return v;
 	} break;
 
@@ -118,7 +45,6 @@ JsonValue* JsonParser::parseValue() {
 			bool b = false;
 			lexer.readValue(b);
 			v->setBoolean(b);
-			nextToken();
 			return v;
 		}
 
@@ -154,14 +80,13 @@ JsonValue* JsonParser::parseArray(JsonArray* arr) {
 		throw MyError("parseArray failed");
 	}
 	
-	while (lexer.nextToken() && lexer.isOp(",")) {
+	while (lexer.nextToken() && lexer.isOp(",") && lexer.nextToken()) { //bug here
 		_addJsonArrayElement(arr);	
 	}
 
 	if (lexer.isOp("]")) {
 		auto* v = new JsonValue();
 		v->setArray(arr);
-		lexer.nextToken();
 		return v;
 	}
 	else 
@@ -177,7 +102,7 @@ void JsonParser::_addJsonObjectMember(JsonObject* obj) {
 	
 	if (lexer.nextToken() && lexer.isOp(":")) {
 		lexer.nextToken();
-		auto v = parseValue();
+		auto* v = parseValue();
 		if (!v) throw MyError("parseObject failed");
 		obj->emplace(key, std::move(*v));
 	}
@@ -189,11 +114,13 @@ void JsonParser::_addJsonObjectMember(JsonObject* obj) {
 
 JsonValue* JsonParser::parseObject(JsonObject* obj) {
 	if (lexer.isOp("{") && lexer.nextToken() && lexer.isString()) {
+		if (obj == nullptr) 
+			obj = new JsonObject();
 		_addJsonObjectMember(obj);
 	}
 	
-	while (lexer.nextToken() && lexer.isOp(",")) {
-		_addJsonObjectMember(obj);
+	while (lexer.nextToken() && lexer.isOp(",") && lexer.nextToken()) {
+			_addJsonObjectMember(obj);
 	}
 
 	if (lexer.isOp("}")) {
