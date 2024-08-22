@@ -5,7 +5,6 @@ namespace CL {
 struct Token {
 	enum class Type {
 		Undefined,		 // undefined		[x]
-		Null,			 // null			[x] change to None
 		Identifier,      // id				[x] true, false, null
 		Number,			 // 0 - 9			[x] 
 		String,			 // "Hello, World!"	[x]
@@ -15,7 +14,6 @@ struct Token {
 
 	Type type = Type::Undefined;
 	String str;
-	// {"key": "value\t value2"};
 
 	inline void print() const {
 		printf("Token: (%d, %s)\n", type, str.c_str());
@@ -39,6 +37,10 @@ class Tokenizer
 		_src = nullptr;
 		_dst = nullptr;
 	}
+	char _nextChar();
+	char _nextChar(size_t n);
+	
+	void _skipSpaces();
 
 public:
 	Tokenizer() = default;
@@ -47,37 +49,28 @@ public:
 
 	~Tokenizer();
 
-	const Token& token() const;;
 
-	char nextChar();
+	inline const Token& token()			const { return _token;}
+	inline const size_t lineNumber()	const { return _lineNumber; }
+	inline const size_t columnNumber()	const { return _columnNumber; }
+
+
 	bool nextToken();
 
+	bool isEnd() const;
 
 	bool isType(Type t) const;
 	bool isEquals(Type t, const char* sz) const;
 
-	bool isNull() const; //to parser, parser manages syntax
-
-	bool isBool() const;
-	bool isBool(const char* sz) const; // to parser, parser manages syntax
-
-	bool isString() const;
-	bool isString(const char* sz) const;
-
-	bool isNumber() const;
-	bool isNumber(const char* sz) const; // del
-
-	bool isOp() const;
-	bool isOp(const char* sz) const;
-
+	bool isOp()			const;
+	bool isString()		const;
+	bool isNumber()		const;
 	bool isIdentifier() const;
-	bool isIdentifier(const char* sz) const;
 
-	
+	bool isOp(const char* sz)			const;
+	bool isString(const char* sz)		const;
+	bool isIdentifier(const char* sz)	const;
 
-	bool isEnd() const;
-
-	void skipSpaces();
 };
 
 

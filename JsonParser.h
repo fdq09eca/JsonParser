@@ -12,23 +12,22 @@ class JsonParser {
 private:
 	using Lexer = Tokenizer;
 
-	Lexer lexer;
+	Lexer _lexer;
 	
-	void expectOp(const char* op);
-
-	bool matchOp(const char* op);	
+	void _expectOp(const char* op);
+	bool _matchOp(const char* op);	
+	bool _isNull() const; 
+	bool _isBool() const;
+	bool _isBool(const char* sz) const; 
 
 public:
-	inline JsonParser(const char* sz) : lexer(sz) { lexer.nextToken(); }
+	inline JsonParser(const char* sz) : _lexer(sz) { _lexer.nextToken(); }
 
-	inline const Token& token() const { return lexer.token(); }
-
-	inline bool nextToken() { return lexer.nextToken(); }
+	inline const Token& token() const	{ return _lexer.token(); }
+	inline bool nextToken()				{ return _lexer.nextToken(); }
 
 	void parseArray(JsonValue& v);
-
 	void parseObject(JsonValue& v);
-
 	void parseValue(JsonValue& v);
 
 	void readValue(double& outValue); 

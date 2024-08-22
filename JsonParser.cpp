@@ -5,6 +5,21 @@
 namespace CL
 {
 
+bool JsonParser::_isNull() const
+{
+	return _lexer.isEquals(Token::Type::Identifier, "null");
+}
+
+bool JsonParser::_isBool() const
+{
+	return _lexer.isIdentifier("true") || _lexer.isIdentifier("false");
+}
+
+bool JsonParser::_isBool(const char* sz) const
+{
+	return _isBool() && 0 == strcmp(token().str.c_str(), sz);
+}
+
 void JsonParser::parseValue(JsonValue& v) {
 	
 	switch (token().type)
@@ -12,11 +27,7 @@ void JsonParser::parseValue(JsonValue& v) {
 	case Token::Type::Eof:
 		return ;
 
-	case Token::Type::Null: {
-		v.setNull();
-		nextToken();
-		return;
-	} 
+	
 
 	case Token::Type::Number: {
 		double d{};
@@ -33,18 +44,23 @@ void JsonParser::parseValue(JsonValue& v) {
 
 	case Token::Type::Identifier: {
 
-		if (lexer.isBool()) {
+		if (_isBool()) {
 			bool b = false;
 			readValue(b);
 			v.setBoolean(b);
 			return;
 		}
-
+		
+		if (_isNull()) {
+			v.setNull();
+			nextToken();
+			return;
+		}
 	} 
 
 	case Token::Type::Op: {
-		if		(lexer.isOp("[")) parseArray(v);
-		else if (lexer.isOp("{")) parseObject(v);
+		if		(_lexer.isOp("[")) parseArray(v);
+		else if (_lexer.isOp("{")) parseObject(v);
 		else throw MyError("unknown Op");
 		return;
 	}
@@ -59,7 +75,7 @@ void JsonParser::parseValue(JsonValue& v) {
 
 
 
-void JsonParser::expectOp(const char* op) {
+void JsonParser::_expectOp(const char* op) {
 		
 // Error: : Unexpected token[=]
 // -------------- -
@@ -71,23 +87,23 @@ void JsonParser::expectOp(const char* op) {
 // 
 // 									  ^ --
 
-		if (!lexer.isOp(op)) throw MyError("expectOp failed");
-		lexer.nextToken();
+		if (!_lexer.isOp(op)) throw MyError("expectOp failed");
+		_lexer.nextToken();
 }
 
-bool JsonParser::matchOp(const char* op) {
-	if (lexer.isOp(op)) {
-		lexer.nextToken();
+bool JsonParser::_matchOp(const char* op) {
+	if (_lexer.isOp(op)) {
+		_lexer.nextToken();
 		return true;
 	}
 	return false;
 }
 
 void JsonParser::parseArray(JsonValue& v) {
-	expectOp("[");
+	_expectOp("[");
 	auto& arr = *v.setToArray();
 
-	if (matchOp("]")) return;
+	if (_matchOp("]")) return;
 
 	while (true) {
 		
@@ -96,18 +112,18 @@ void JsonParser::parseArray(JsonValue& v) {
 		parseValue(e);
 		
 		
-		if (matchOp(",")) continue;
-		if (matchOp("]")) break;
+		if (_matchOp(",")) continue;
+		if (_matchOp("]")) break;
 		throw MyError("parseArray failed");
 	}
 }
 
 void JsonParser::parseObject(JsonValue& v) {
 	
-	expectOp("{");
+	_expectOp("{");
 	auto& obj = *v.setToObject();
 	
-	if (matchOp("}")) return;
+	if (_matchOp("}")) return;
 
 	while (true) {
 
@@ -118,11 +134,11 @@ void JsonParser::parseObject(JsonValue& v) {
 		
 		auto& val = obj[memberName];
 		
-		expectOp(":");
+		_expectOp(":");
 		parseValue(val);
 
-		if (matchOp(",")) continue;
-		if (matchOp("}")) break;
+		if (_matchOp(",")) continue;
+		if (_matchOp("}")) break;
 		throw MyError("parseObject failed");
 		
 	}
@@ -130,7 +146,7 @@ void JsonParser::parseObject(JsonValue& v) {
 
 void JsonParser::readValue(double& outValue) {
 
-	if (!lexer.isNumber())		throw MyError("readValue(double) failed");
+	if (!_lexer.isNumber())		throw MyError("readValue(double) failed");
 	if (token().str.empty()) throw MyError("readValue(double) failed");
 
 
@@ -141,7 +157,7 @@ void JsonParser::readValue(double& outValue) {
 
 void JsonParser::readValue(String& outValue) {
 
-	if (!lexer.isType(Token::Type::String))	throw MyError("readValue(String) failed");
+	if (!_lexer.isType(Token::Type::String))	throw MyError("readValue(String) failed");
 
 
 	outValue = token().str;
@@ -150,12 +166,12 @@ void JsonParser::readValue(String& outValue) {
 
 void JsonParser::readValue(bool& outValue) {
 
-	if (lexer.isIdentifier("true"))
+	if (_lexer.isIdentifier("true"))
 	{
 		outValue = true;
 		nextToken();
 	}
-	else if (lexer.isIdentifier("false"))
+	else if (_lexer.isIdentifier("false"))
 	{
 		outValue = false;
 		nextToken();

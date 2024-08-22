@@ -53,7 +53,7 @@ class TokenizerTests {
 		auto b = t.nextToken();
 		TEST(b);
 		
-		if (!TEST(t.isNumber(v))) {
+		if (!TEST(t.isEquals(Token::Type::Number, v))) {
 			printf("  [FAIL_VAL] v = %s\n", v);
 		}
 	}
@@ -82,7 +82,7 @@ public:
 
 		b = t.nextToken();
 		TEST(b);
-		TEST(t.isNull());
+		TEST(t.isEquals(Token::Type::Identifier, "null"));
 
 		b = t.nextToken();
 		TEST(b);
@@ -90,7 +90,7 @@ public:
 
 		b = t.nextToken();
 		TEST(b);
-		TEST(t.isBool("true"));
+		TEST(t.isIdentifier("true"));
 
 		b = t.nextToken();
 		TEST(b);
@@ -98,7 +98,7 @@ public:
 
 		b = t.nextToken();
 		TEST(b);
-		TEST(t.isBool("false"));
+		TEST(t.isIdentifier("false"));
 
 		b = t.nextToken();
 		TEST(b);
@@ -106,7 +106,7 @@ public:
 
 		b = t.nextToken();
 		TEST(b);
-		TEST(t.isNumber("123"));
+		TEST(t.isEquals(Token::Type::Number, "123"));
 	}
 
 

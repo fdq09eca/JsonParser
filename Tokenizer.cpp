@@ -1,29 +1,25 @@
 #include "Tokenizer.h"
 namespace CL {
 
-bool Tokenizer::isEnd() const {
-	MY_ASSERT(_c != nullptr);
-	return (*_c == '\0');
-}
+
 
 Tokenizer::Tokenizer(const char* sz) : _c(sz), _src(sz) {
-	if (_c) {
+	if (_c) 
 		_dst = _c + strlen(_c);
-	}
-	else {
+	else 
 		throw MyError("Tokenizer(const char* sz)");
-	}
 }
 
 Tokenizer::~Tokenizer() {
 	_reset();
 }
 
-const Token& Tokenizer::token() const {
-	return _token;
+char Tokenizer::_nextChar(size_t n) {
+	for (int i = 0; i < n; i++) _nextChar();
+	return *_c;
 }
 
-char Tokenizer::nextChar() {
+char Tokenizer::_nextChar() {
 	MY_ASSERT(_c != nullptr
 		&& _src != nullptr
 		&& _dst != nullptr
@@ -39,21 +35,20 @@ char Tokenizer::nextChar() {
 		else {
 			_columnNumber++;
 		}
-
 		return *_c;
 	}
 	throw MyError("Tokenizer::nextChar() out of range");
 }
 
-void Tokenizer::skipSpaces() {
+void Tokenizer::_skipSpaces() {
 	while (!isEnd() && isspace(*_c)) {
-		nextChar();
+		_nextChar();
 	}
 }
 
 bool Tokenizer::nextToken() {
 
-	skipSpaces();
+	_skipSpaces();
 
 	// number
 	if (*_c == '-' || isdigit(*_c)) {
@@ -61,13 +56,13 @@ bool Tokenizer::nextToken() {
 		auto* p = _c;
 
 		if (*_c == '-') {
-			nextChar();
+			_nextChar();
 			if (!isdigit(*_c))
 				throw MyError("[ERR] Tokenizer::nextToken() Invalid number.");
 		}
 
 		if (*_c == '0') {
-			nextChar();
+			_nextChar();
 			if (isdigit(*_c))
 				throw MyError("[ERR] Tokenizer::nextToken() Invalid number.");
 		}
@@ -78,30 +73,30 @@ bool Tokenizer::nextToken() {
 				throw MyError("[ERR] Tokenizer::nextToken() Invalid number.");
 
 			while (isdigit(*_c)) {
-				nextChar();
+				_nextChar();
 			}
 		}
 
 		if (*_c == '.') {
-			nextChar();
+			_nextChar();
 			if (!isdigit(*_c))
 				throw MyError("[ERR] Tokenizer::nextToken() Invalid number.");
 
 			while (isdigit(*_c)) {
-				nextChar();
+				_nextChar();
 			}
 		}
 
 		if (*_c == 'e' || *_c == 'E') {
 
-			nextChar();
+			_nextChar();
 			if (*_c == '+' || *_c == '-')
-				nextChar();
+				_nextChar();
 
 			if (!isdigit(*_c)) throw MyError("[ERR] Tokenizer::nextToken() Invalid number.");
 
 			while (isdigit(*_c)) {
-				nextChar();
+				_nextChar();
 			}
 		}
 
@@ -125,12 +120,12 @@ bool Tokenizer::nextToken() {
 	{
 		_token.type = Token::Type::Op;
 		_token.str = *_c;
-		nextChar();
+		_nextChar();
 		return true;
 	}
 
 	case '"': {
-		nextChar(); // skip open '"'
+		_nextChar(); // skip open '"'
 
 		auto* p = _c;
 
@@ -142,20 +137,20 @@ bool Tokenizer::nextToken() {
 
 				_token.type = Token::Type::String;
 				_token.str.assign(p, _c - p);
-				nextChar(); // skip close '"'
+				_nextChar(); // skip close '"'
 				return true;
 			}
 
-			nextChar();
+			_nextChar();
 		}
 	}
 
 
 	case 'n': {
 		if (0 == strncmp(_c, "null", 4)) {
-			_token.type = Token::Type::Null;
+			_token.type = Token::Type::Identifier;
 			_token.str = "null";
-			for (int i = 0; i < 4; i++) nextChar();
+			_nextChar(4);
 			return true;
 		}
 		else {
@@ -168,89 +163,45 @@ bool Tokenizer::nextToken() {
 		if (0 == strncmp(_c, "true", 4)) {
 			_token.type = Token::Type::Identifier;
 			_token.str = "true";
-			for (int i = 0; i < 4; i++) nextChar();
+			_nextChar(4);
 			return true;
 		}
-		else if (0 == strncmp(_c, "false", 5)) {
+		
+		if (0 == strncmp(_c, "false", 5)) {
 			_token.type = Token::Type::Identifier;
 			_token.str = "false";
-			for (int i = 0; i < 5; i++) nextChar();
+			_nextChar(5);
 			return true;
 		}
-		else {
-			throw MyError("[ERR] unknown Identifier");
-		}
+
+		throw MyError("[ERR] unknown Identifier");
+		
 	}
 
-	default: {
-		throw MyError("nextToken failed");
+	default: throw MyError("nextToken failed"); 
+	
 	}
-
-	}
-
-
 }
 
-bool Tokenizer::isEquals(Type t, const char* sz) const {
+bool Tokenizer::isEnd()	const { 
+	MY_ASSERT(_c != nullptr); 
+	return (*_c == '\0'); 
+}
+
+bool Tokenizer::isEquals(Type t, const char* sz) const { 
+	MY_ASSERT(sz != nullptr); 
 	return isType(t) && 0 == strcmp(_token.str.c_str(), sz); 
 }
 
-bool Tokenizer::isNull() const
-{
-	return isEquals(Type::Null, "null");
-}
+bool Tokenizer::isType(Type t) const { return _token.type == t; }
 
-bool Tokenizer::isBool() const
-{
-	return isIdentifier("true") || isIdentifier("false");
-}
+bool Tokenizer::isOp()			const { return isType(Type::Op);			}
+bool Tokenizer::isString()		const { return isType(Type::String);		}
+bool Tokenizer::isNumber()		const { return isType(Type::Number);		}
+bool Tokenizer::isIdentifier()	const { return isType(Type::Identifier);	}
 
-bool Tokenizer::isBool(const char* sz) const
-{
-	return isBool() && 0 == strcmp(_token.str.c_str(), sz);
-}
-
-bool Tokenizer::isType(Type t) const {
-	return _token.type == t;
-}
-
-bool Tokenizer::isString() const
-{
-	return isType(Type::String);
-}
-
-bool Tokenizer::isString(const char* sz) const
-{
-	return isEquals(Type::String, sz);
-}
-
-bool Tokenizer::isNumber() const {
-	return isType(Type::Number);
-}
-
-bool Tokenizer::isNumber(const char* sz) const {
-	return isEquals(Type::Number, sz);
-}
-
-bool Tokenizer::isOp() const {
-	return isType(Type::Op);
-}
-
-bool Tokenizer::isOp(const char* sz) const {
-	return isEquals(Type::Op, sz);
-}
-
-bool Tokenizer::isIdentifier() const
-{
-	return isType(Type::Identifier);
-}
-
-
-bool Tokenizer::isIdentifier(const char* sz) const {
-	return isEquals(Type::Identifier, sz);
-}
-
-
-
+bool Tokenizer::isOp(const char* sz)			const { return isEquals(Type::Op, sz);			}
+bool Tokenizer::isString(const char* sz)		const { return isEquals(Type::String, sz);		}
+bool Tokenizer::isIdentifier(const char* sz)	const { return isEquals(Type::Identifier, sz);	}
 
 } // namespace CL
