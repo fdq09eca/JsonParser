@@ -1,165 +1,225 @@
 #include "Test.h"
 
+namespace CL {
 
-#if 0
-class ParserTests
-{
-public:
-	static void test_parseObject() {
 
-		{
-			const char* json = "{ \"key1\" : 123 }";
-			JsonParser p(json);
-			auto* o = p.parseValue();
-			TEST(o->isNull() == false);
-			TEST(o->getType() == JsonValue::EType::Object);
-			JsonObject* obj = o->getObject();
-			TEST(obj != nullptr);
-			TEST(obj->size() == 1);
-			TEST(obj->find("key1") != obj->end()); // key1 exists
-			auto* v = &obj->at("key1");
-			TEST(v->getType() == JsonValue::EType::Number);
-			TEST(v->getNumber() == 123);
-		}
-
-		{
-			const char* json = "{ \"key1\" : 123, \"key2\" : \"Hello, World!\", \"key3\" : [1, true, false, \"hello\"] }";
-			JsonParser p(json);
-			auto* o = p.parseValue();
-		}
-
-		{
-			const char* json = "{ \"key1\" : { \"key2\" : { \"key3\" : 123 } } }";
-			JsonParser p(json);
-			auto* o = p.parseValue();
-		}
-	};
-
-	static void test_parseArray() {
-		const char* json = "[null, true, false, 123, 123.456, \"Hello, World!\", [0, -2.1, 3e4, [1, 2, 3]]]";
-		JsonParser p(json);
-		auto* o = p.parseValue();
-	}
-
-	static void test_parseNull()
+void ParserTests::test_parseObject() {
 	{
-		const char* json = "null";
-		JsonParser p(json);
-		auto* o = p.parseValue();
-		TEST(o->isNull() == true);
-		TEST(o->getType() == JsonValue::EType::Null);
+		JsonParser p("{ \"key1\" : [null, true, false, 123] }");
+		JsonValue jv;
+
+		p.parseObject(jv);
+
+		TEST(jv.getType() == JsonValue::EType::Object);
+
+		auto* obj = jv.getObject();
+		TEST(obj != nullptr);
+
+		TEST(obj->size() == 1);
+		TEST(obj->find("key1") != obj->end()); // key1 exists
+
+		const auto& v = obj->at("key1"); // jv non copyable
+		TEST(v.getType() == JsonValue::EType::Array);
+		auto* arr = v.getArray();
+		TEST(arr != nullptr);
+		TEST(arr->size() == 4);
+		TEST(arr->at(0).isNull());
+		TEST(arr->at(1).getBoolean());
+		TEST(arr->at(2).getBoolean() == false);
+		TEST(arr->at(3).getNumber() == 123);
 	}
 
-	static void test_parseBoolean()
 	{
-		const char* json = "true";
-		JsonParser p(json);
-		auto* o = p.parseValue();
-		TEST(o->isNull() == false);
-		TEST(o->getType() == JsonValue::EType::Boolean);
-		TEST(o->getBoolean() == true);
+		JsonParser p("{ \"key1\" : 123 }");
 
-		json = "false";
-		p = JsonParser(json);
-		o = p.parseValue();
-		TEST(o->isNull() == false);
-		TEST(o->getType() == JsonValue::EType::Boolean);
-		TEST(o->getBoolean() == false);
+		auto jv = JsonValue();
+		p.parseValue(jv);
+
+		TEST(jv.getType() == JsonValue::EType::Object);
+		TEST(jv.getObject()->size() == 1);
+		TEST(jv.getObject()->find("key1") != jv.getObject()->end());
+		TEST(jv.getObject()->at("key1").getNumber() == 123);
+
 	}
 
-	static void test_parseNumber()
 	{
-		{
-			const char* json = "0";
-			JsonParser p(json);
-			auto* o = p.parseValue();
-			TEST(o->isNull() == false);
-			TEST(o->getType() == JsonValue::EType::Number);
-			TEST(o->getNumber() == 0);
-		}
+		JsonParser p("{ \"key1\" : 123, \"key2\": 321 }");
 
+		auto jv = JsonValue();
+		p.parseValue(jv);
 
-		{
-			const char* json = "0.05";
-			JsonParser p(json);
-			auto* o = p.parseValue();
-			TEST(o->isNull() == false);
-			TEST(o->getType() == JsonValue::EType::Number);
-			TEST(o->getNumber() == 0.05);
-		}
+		TEST(jv.getType() == JsonValue::EType::Object);
+		TEST(jv.getObject()->size() == 2);
+		TEST(jv.getObject()->find("key1") != jv.getObject()->end());
+		TEST(jv.getObject()->at("key1").getNumber() == 123);
 
-		{
-			const char* json = "-0.05";
-			JsonParser p(json);
-			auto* o = p.parseValue();
-			TEST(o->isNull() == false);
-			TEST(o->getType() == JsonValue::EType::Number);
-			TEST(o->getNumber() == -0.05);
-		}
-
-		{
-			const char* json = "123";
-			JsonParser p(json);
-			auto* o = p.parseValue();
-			TEST(o->isNull() == false);
-			TEST(o->getType() == JsonValue::EType::Number);
-			TEST(o->getNumber() == 123);
-		}
-
-		{
-			const char* json = "-123";
-			auto p = JsonParser(json);
-			auto* o = p.parseValue();
-			TEST(o->isNull() == false);
-			TEST(o->getType() == JsonValue::EType::Number);
-			TEST(o->getNumber() == -123);
-		}
-
-		{
-			const char* json = "123.456";
-			auto p = JsonParser(json);
-			auto* o = p.parseValue();
-			TEST(o->isNull() == false);
-			TEST(o->getType() == JsonValue::EType::Number);
-			TEST(o->getNumber() == 123.456);
-		}
-
-		{
-			const char* json = "-123.456";
-			auto p = JsonParser(json);
-			auto* o = p.parseValue();
-			TEST(o->isNull() == false);
-			TEST(o->getType() == JsonValue::EType::Number);
-			TEST(o->getNumber() == -123.456);
-		}
-
-		{
-			const char* json = "123.456e123";
-			auto p = JsonParser(json);
-			auto* o = p.parseValue();
-			TEST(o->isNull() == false);
-			TEST(o->getType() == JsonValue::EType::Number);
-			TEST(o->getNumber() == 123.456e123);
-		}
-
-		{
-			const char* json = "123.456e+123";
-			auto p = JsonParser(json);
-			auto* o = p.parseValue();
-			TEST(o->isNull() == false);
-			TEST(o->getType() == JsonValue::EType::Number);
-			TEST(o->getNumber() == 123.456e+123);
-		}
-
-		{
-			const char* json = "123.456e-123";
-			auto p = JsonParser(json);
-			auto* o = p.parseValue();
-			TEST(o->isNull() == false);
-			TEST(o->getType() == JsonValue::EType::Number);
-			TEST(o->getNumber() == 123.456e-123);
-		}
+		TEST(jv.getObject()->find("key2") != jv.getObject()->end());
+		TEST(jv.getObject()->at("key2").getNumber() == 321);
 
 	}
-}; // class ParserTests
-#endif
+
+	{
+		JsonParser p("{ \"key1\" : {\"key2\" : 123} }");
+
+		auto jv = JsonValue();
+		p.parseValue(jv);
+
+		TEST(jv.getType() == JsonValue::EType::Object);
+		TEST(jv.getObject()->size() == 1);
+		TEST(jv.getObject()->find("key1") != jv.getObject()->end());
+		TEST(jv.getObject()->at("key1").getType() == JsonValue::EType::Object);
+		TEST(jv.getObject()->at("key1").getObject()->size() == 1);
+		TEST(jv.getObject()->at("key1").getObject()->find("key2") != jv.getObject()->at("key1").getObject()->end());
+		TEST(jv.getObject()->at("key1").getObject()->at("key2").getNumber() == 123);
+	}
+
+	{
+		JsonParser p("{ \"key1\" : {\"key2\" : [123, null, false]} }");
+		auto jv = JsonValue();
+		p.parseValue(jv);
+		TEST(jv.getType() == JsonValue::EType::Object);
+		TEST(jv.getObject()->size() == 1);
+		TEST(jv.getObject()->find("key1") != jv.getObject()->end());
+		TEST(jv.getObject()->at("key1").getType() == JsonValue::EType::Object);
+		TEST(jv.getObject()->at("key1").getObject()->size() == 1);
+		TEST(jv.getObject()->at("key1").getObject()->find("key2") != jv.getObject()->at("key1").getObject()->end());
+		TEST(jv.getObject()->at("key1").getObject()->at("key2").getType() == JsonValue::EType::Array);
+		TEST(jv.getObject()->at("key1").getObject()->at("key2").getArray()->size() == 3);
+		TEST(jv.getObject()->at("key1").getObject()->at("key2").getArray()->at(0).getNumber() == 123);
+		TEST(jv.getObject()->at("key1").getObject()->at("key2").getArray()->at(1).isNull());
+		TEST(jv.getObject()->at("key1").getObject()->at("key2").getArray()->at(2).getBoolean() == false);
+	}
+} 
+
+void TokenizerTests::_getNumber(const char* v) {
+	Tokenizer t(v);
+	auto b = t.nextToken();
+	TEST(b);
+
+	if (!TEST(t.isEquals(Token::Type::Number, v))) {
+		printf("  [FAIL_VAL] v = %s\n", v);
+	}
+}
+
+void TokenizerTests::test_nextToken() {
+	Tokenizer t("{ \"key1\" : [null, true, false, 123] }");
+
+	auto b = t.nextToken();
+	TEST(b);
+	TEST(t.isOp("{"));
+
+
+	b = t.nextToken();
+	TEST(b);
+	TEST(t.isString("key1"));
+
+	b = t.nextToken();
+	TEST(b);
+	TEST(t.isOp(":"));
+
+
+	b = t.nextToken();
+	TEST(b);
+	TEST(t.isOp("["));
+
+	b = t.nextToken();
+	TEST(b);
+	TEST(t.isEquals(Token::Type::Identifier, "null"));
+
+	b = t.nextToken();
+	TEST(b);
+	TEST(t.isOp(","));
+
+	b = t.nextToken();
+	TEST(b);
+	TEST(t.isIdentifier("true"));
+
+	b = t.nextToken();
+	TEST(b);
+	TEST(t.isOp(","));
+
+	b = t.nextToken();
+	TEST(b);
+	TEST(t.isIdentifier("false"));
+
+	b = t.nextToken();
+	TEST(b);
+	TEST(t.isOp(","));
+
+	b = t.nextToken();
+	TEST(b);
+	TEST(t.isEquals(Token::Type::Number, "123"));
+}
+
+void TokenizerTests::test_getNumber() {
+	// zero
+	_getNumber("0");
+	_getNumber("0.0");
+	_getNumber("0.00");
+	_getNumber("0.000");
+	_getNumber("0.0e0");
+	_getNumber("0.0e+0");
+	_getNumber("0.0e-0");
+	_getNumber("0.0E0");
+	_getNumber("0.0E+0");
+	_getNumber("0.0E-0");
+
+	//positive
+	_getNumber("1");
+	_getNumber("1.0");
+	_getNumber("1.00");
+	_getNumber("1.000");
+	_getNumber("1.1");
+	_getNumber("1.11");
+	_getNumber("1.123");
+	_getNumber("1.0e0");
+	_getNumber("1.0e+0");
+	_getNumber("1.0e-0");
+	_getNumber("1.123e0");
+	_getNumber("1.123e+0");
+	_getNumber("1.123e-0");
+	_getNumber("1.0E0");
+	_getNumber("1.0E+0");
+	_getNumber("1.0E-0");
+
+	_getNumber("12");
+	_getNumber("12.0");
+	_getNumber("12.00");
+	_getNumber("12.000");
+	_getNumber("12.1");
+	_getNumber("12.11");
+	_getNumber("12.123");
+	_getNumber("12.0e0");
+	_getNumber("12.0e+0");
+	_getNumber("12.0e-0");
+	_getNumber("12.123e0");
+	_getNumber("12.123e+0");
+	_getNumber("12.123e-0");
+
+	_getNumber("12.123e123");
+	_getNumber("12.123e+123");
+	_getNumber("12.123e-123");
+	_getNumber("12.0E0");
+	_getNumber("12.0E+123");
+	_getNumber("12.0E-123");
+
+	//positive
+	_getNumber("-1");
+	_getNumber("-1.0");
+	_getNumber("-1.00");
+	_getNumber("-1.000");
+	_getNumber("-1.1");
+	_getNumber("-1.11");
+	_getNumber("-1.123");
+	_getNumber("-1.0e0");
+	_getNumber("-1.0e+0");
+	_getNumber("-1.0e-0");
+	_getNumber("-1.123e0");
+	_getNumber("-1.123e+0");
+	_getNumber("-1.123e-0");
+	_getNumber("-1.0E0");
+	_getNumber("-1.0E+0");
+	_getNumber("-1.0E-0");
+}
+
+} // namespace CL
