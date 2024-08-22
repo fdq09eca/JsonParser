@@ -39,10 +39,58 @@ public:
 			p.parseValue(jv);
 			
 			TEST(jv.getType() == JsonValue::EType::Object);
-			
+			TEST(jv.getObject()->size() == 1);
+			TEST(jv.getObject()->find("key1") != jv.getObject()->end());
+			TEST(jv.getObject()->at("key1").getNumber() == 123);
 
+		}
 
+		{
+			JsonParser p("{ \"key1\" : 123, \"key2\": 321 }");
 
+			auto jv = JsonValue();
+			p.parseValue(jv);
+
+			TEST(jv.getType() == JsonValue::EType::Object);
+			TEST(jv.getObject()->size() == 2);
+			TEST(jv.getObject()->find("key1") != jv.getObject()->end());
+			TEST(jv.getObject()->at("key1").getNumber() == 123);
+
+			TEST(jv.getObject()->find("key2") != jv.getObject()->end());
+			TEST(jv.getObject()->at("key2").getNumber() == 321);
+
+		}
+
+		{
+			JsonParser p("{ \"key1\" : {\"key2\" : 123} }");
+
+			auto jv = JsonValue();
+			p.parseValue(jv);
+
+			TEST(jv.getType() == JsonValue::EType::Object);
+			TEST(jv.getObject()->size() == 1);
+			TEST(jv.getObject()->find("key1") != jv.getObject()->end());
+			TEST(jv.getObject()->at("key1").getType() == JsonValue::EType::Object);
+			TEST(jv.getObject()->at("key1").getObject()->size() == 1);
+			TEST(jv.getObject()->at("key1").getObject()->find("key2") != jv.getObject()->at("key1").getObject()->end());
+			TEST(jv.getObject()->at("key1").getObject()->at("key2").getNumber() == 123);
+		}
+
+		{
+			JsonParser p("{ \"key1\" : {\"key2\" : [123, null, false]} }");
+			auto jv = JsonValue();
+			p.parseValue(jv);
+			TEST(jv.getType() == JsonValue::EType::Object);
+			TEST(jv.getObject()->size() == 1);
+			TEST(jv.getObject()->find("key1") != jv.getObject()->end());
+			TEST(jv.getObject()->at("key1").getType() == JsonValue::EType::Object);
+			TEST(jv.getObject()->at("key1").getObject()->size() == 1);
+			TEST(jv.getObject()->at("key1").getObject()->find("key2") != jv.getObject()->at("key1").getObject()->end());
+			TEST(jv.getObject()->at("key1").getObject()->at("key2").getType() == JsonValue::EType::Array);
+			TEST(jv.getObject()->at("key1").getObject()->at("key2").getArray()->size() == 3);
+			TEST(jv.getObject()->at("key1").getObject()->at("key2").getArray()->at(0).getNumber() == 123);
+			TEST(jv.getObject()->at("key1").getObject()->at("key2").getArray()->at(1).isNull());
+			TEST(jv.getObject()->at("key1").getObject()->at("key2").getArray()->at(2).getBoolean() == false);
 		}
 	}
 };
