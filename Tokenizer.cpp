@@ -250,43 +250,7 @@ bool Tokenizer::isIdentifier(const char* sz) const {
 	return isEquals(Type::Identifier, sz);
 }
 
-void Tokenizer::readValue(double& outValue) {
 
-	if (!isNumber())		throw MyError("readValue(double) failed");
-	if (_token.str.empty()) throw MyError("readValue(double) failed");
-
-
-	if (1 != sscanf_s(_token.str.c_str(), "%lf", &outValue))
-		throw MyError("readValue failed");
-	nextToken();
-}
-
-void Tokenizer::readValue(String& outValue) {
-
-	if (!isType(Type::String))	throw MyError("readValue(String) failed");
-	
-
-	outValue = _token.str;
-	nextToken();
-}
-
-void Tokenizer::readValue(bool& outValue) {
-
-	if (isIdentifier("true")) 
-	{
-		outValue = true;
-		nextToken();
-	}
-	else if (isIdentifier("false"))
-	{
-		outValue = false;
-		nextToken();
-	}
-	else 
-	{
-		throw MyError("readValue(bool) failed");
-	}
-}
 
 
 } // namespace CL

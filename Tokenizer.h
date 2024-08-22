@@ -73,9 +73,7 @@ public:
 	bool isIdentifier() const;
 	bool isIdentifier(const char* sz) const;
 
-	void readValue(double& outValue); // add nextToken, to parser
-	void readValue(String& outValue); // add nextToken, to parser
-	void readValue(bool& outValue);	  // add nextToken, to parser
+	
 
 	bool isEnd() const;
 

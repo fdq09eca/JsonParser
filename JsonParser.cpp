@@ -20,14 +20,14 @@ void JsonParser::parseValue(JsonValue& v) {
 
 	case Token::Type::Number: {
 		double d{};
-		lexer.readValue(d);
+		readValue(d);
 		v.setNumber(d);
 		return;
 	}
 
 	case Token::Type::String: {
 		auto* s = v.setToString();
-		lexer.readValue(*s);
+		readValue(*s);
 		return;
 	} 
 
@@ -35,7 +35,7 @@ void JsonParser::parseValue(JsonValue& v) {
 
 		if (lexer.isBool()) {
 			bool b = false;
-			lexer.readValue(b);
+			readValue(b);
 			v.setBoolean(b);
 			return;
 		}
@@ -75,7 +75,7 @@ void JsonParser::expectOp(const char* op) {
 		lexer.nextToken();
 }
 
-bool JsonParser::tryGetOp(const char* op) {
+bool JsonParser::matchOp(const char* op) {
 	if (lexer.isOp(op)) {
 		lexer.nextToken();
 		return true;
@@ -87,7 +87,7 @@ void JsonParser::parseArray(JsonValue& v) {
 	expectOp("[");
 	auto& arr = *v.setToArray();
 
-	if (tryGetOp("]")) return;
+	if (matchOp("]")) return;
 
 	while (true) {
 		
@@ -96,8 +96,8 @@ void JsonParser::parseArray(JsonValue& v) {
 		parseValue(e);
 		
 		
-		if (tryGetOp(",")) continue;
-		if (tryGetOp("]")) break;
+		if (matchOp(",")) continue;
+		if (matchOp("]")) break;
 		throw MyError("parseArray failed");
 	}
 }
@@ -107,12 +107,12 @@ void JsonParser::parseObject(JsonValue& v) {
 	expectOp("{");
 	auto& obj = *v.setToObject();
 	
-	if (tryGetOp("}")) return;
+	if (matchOp("}")) return;
 
 	while (true) {
 
 		String memberName;
-		lexer.readValue(memberName);
+		readValue(memberName);
 		if (memberName.empty()) throw MyError("parseObject failed");
 
 		
@@ -121,10 +121,48 @@ void JsonParser::parseObject(JsonValue& v) {
 		expectOp(":");
 		parseValue(val);
 
-		if (tryGetOp(",")) continue;
-		if (tryGetOp("}")) break;
+		if (matchOp(",")) continue;
+		if (matchOp("}")) break;
 		throw MyError("parseObject failed");
 		
+	}
+}
+
+void JsonParser::readValue(double& outValue) {
+
+	if (!lexer.isNumber())		throw MyError("readValue(double) failed");
+	if (token().str.empty()) throw MyError("readValue(double) failed");
+
+
+	if (1 != sscanf_s(token().str.c_str(), "%lf", &outValue))
+		throw MyError("readValue failed");
+	nextToken();
+}
+
+void JsonParser::readValue(String& outValue) {
+
+	if (!lexer.isType(Token::Type::String))	throw MyError("readValue(String) failed");
+
+
+	outValue = token().str;
+	nextToken();
+}
+
+void JsonParser::readValue(bool& outValue) {
+
+	if (lexer.isIdentifier("true"))
+	{
+		outValue = true;
+		nextToken();
+	}
+	else if (lexer.isIdentifier("false"))
+	{
+		outValue = false;
+		nextToken();
+	}
+	else
+	{
+		throw MyError("readValue(bool) failed");
 	}
 }
 } // namespace CL

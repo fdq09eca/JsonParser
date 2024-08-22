@@ -16,16 +16,12 @@ private:
 	
 	void expectOp(const char* op);
 
-	bool tryGetOp(const char* op);	
+	bool matchOp(const char* op);	
 
 public:
-	inline JsonParser(const char* sz) : lexer(sz) {
-		lexer.nextToken();
-	}
+	inline JsonParser(const char* sz) : lexer(sz) { lexer.nextToken(); }
 
-	inline const Token& token() const {
-		return lexer.token();
-	}
+	inline const Token& token() const { return lexer.token(); }
 
 	inline bool nextToken() { return lexer.nextToken(); }
 
@@ -34,6 +30,11 @@ public:
 	void parseObject(JsonValue& v);
 
 	void parseValue(JsonValue& v);
+
+	void readValue(double& outValue); 
+	void readValue(String& outValue); 
+	void readValue(bool& outValue);	  
+
 }; // class JsonParser
 
 

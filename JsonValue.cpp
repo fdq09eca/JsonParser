@@ -3,8 +3,6 @@
 namespace CL
 {
 
-
-
 void JsonValue::setUndefined() {
 	switch (_type)
 	{
