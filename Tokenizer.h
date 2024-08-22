@@ -4,76 +4,75 @@ namespace CL {
 
 struct Token {
 	enum class Type {
-		Null,			// null				[x]
-		Boolean,		// true, false		[x]
-		Number,			// 0 - 9			[x]
-		String,			// "Hello, World!"	[x]
-		Comma,			// ,				[x]
-		Colon,			// :				[x]
-		OpenBrace,		// [				[x]
-		CloseBrace,		// ]				[x]
-		OpenBracket,	// {				[x]
-		CloseBracket,	// }				[x]
-		Eof,		    // EOF				[x]
+		Undefined,		 // undefined		[x]
+		Identifier,      // id				[x] true, false, null
+		Number,			 // 0 - 9			[x] 
+		String,			 // "Hello, World!"	[x]
+		Op,				 // [ ] { } : ,		[x]
+		Eof,			 // end of file		[x]
 	};
 
-	Type type = Type::Null;
-	String value{};
-
-	Token() = default;
-	Token(Type t, const String& v) : type(t), value(v) {}
-
-	~Token()
-	{
-		type = Type::Null;
-		value.clear();
-	}
+	Type type = Type::Undefined;
+	String str;
 
 	inline void print() const {
-		printf("Token: (%d, %s)\n", type, value.c_str());
+		printf("Token: (%d, %s)\n", type, str.c_str());
 	}
 };
 
 class Tokenizer
 {
-	const char* c = nullptr;
-	const char* src = nullptr;
-	const char* dst = nullptr;
+	const char* _c = nullptr;
+	const char* _src = nullptr;
+	const char* _dst = nullptr;
+
+	size_t		_lineNumber = 1;
+	size_t		_columnNumber = 1;
+
+	using Type = Token::Type;
+	Token _token;
 
 	void _reset() {
-		c = nullptr;
-		src = nullptr;
-		dst = nullptr;
+		_c = nullptr;
+		_src = nullptr;
+		_dst = nullptr;
 	}
+	char _nextChar();
+	char _nextChar(size_t n);
+	
+	void _skipSpaces();
 
 public:
 	Tokenizer() = default;
 
-	Tokenizer(const char* sz) : c(sz), src(sz) {
-		dst = c + strlen(c);
-	}
+	Tokenizer(const char* sz);
 
-	~Tokenizer() {
-		_reset();
-	}
+	~Tokenizer();
 
-	Token* getNextToken();
 
-	Token* getNull();
-	Token* getNumber();
-	Token* getString();
-	Token* getBoolean();
+	inline const Token& token()			const { return _token;}
+	inline const size_t lineNumber()	const { return _lineNumber; }
+	inline const size_t columnNumber()	const { return _columnNumber; }
+
+
+	bool nextToken();
 
 	bool isEnd() const;
 
-	bool peek(const char* cmp_str) const;
+	bool isType(Type t) const;
+	bool isEquals(Type t, const char* sz) const;
 
-	void advance(size_t n = 1);
-	CL::Token* advanceAndGetToken(Token::Type type, size_t n = 1);
+	bool isOp()			const;
+	bool isString()		const;
+	bool isNumber()		const;
+	bool isIdentifier() const;
 
-	void skipSpaces();
+	bool isOp(const char* sz)			const;
+	bool isString(const char* sz)		const;
+	bool isIdentifier(const char* sz)	const;
 
 };
+
 
 
 } // namespace CL

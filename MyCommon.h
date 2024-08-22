@@ -3,26 +3,32 @@
 #include "pch.h"
 #include <type_traits>
 
-#define MY_ASSERT(x) my_assert(x, #x, __LINE__, __FILE__)
+inline bool my_testfunc(bool x, const char* expr_str, int lineNumber) {
+	if (!x)
+		printf("[FAIL]: %s, line %d\n", expr_str, lineNumber);
+	else {
+		printf("[OK]: %s, line %d\n", expr_str, lineNumber);
+	}
+	return x;
+}
 
-#define TEST(EXPR)                                                                  \
-    do                                                                              \
-    {                                                                               \
-        printf("[%s] Line %3d: %s\n", ((EXPR) ? " OK " : "FAIL"), __LINE__, #EXPR); \
-    } while (0) //-------------------
+#define TEST(EXPR) my_testfunc(EXPR, #EXPR, __LINE__)
 
 #define MY_DUMP(X)                         \
     do                                     \
     {                                      \
         std::cout << #X ": " << X << "\n"; \
-    } while (false)
+    } while (false)                        \
+	// ------------------
 
 inline void my_assert(bool x, const char* msg, int lineNumber, const char* filename)
 {
 	assert(x);
 	if (!x)
-		printf("[ASSERT_ERR] %s", msg);
+		printf("[ASSERT_ERR] %s:%d : %s", filename, lineNumber, msg);
 }
+
+#define MY_ASSERT(x) my_assert(x, #x, __LINE__, __FILE__)
 
 namespace CL
 {
