@@ -160,7 +160,6 @@ bool Tokenizer::nextToken() {
 		}
 		else {
 			throw MyError("[ERR] unknown Identifier");
-			return false;
 		}
 	}
 
@@ -180,7 +179,6 @@ bool Tokenizer::nextToken() {
 		}
 		else {
 			throw MyError("[ERR] unknown Identifier");
-			return false;
 		}
 	}
 
@@ -190,11 +188,11 @@ bool Tokenizer::nextToken() {
 
 	}
 
-	return false;
+
 }
 
 bool Tokenizer::isEquals(Type t, const char* sz) const {
-	return isType(t) && 0 == strcmp(_token.str.c_str(), sz);
+	return isType(t) && 0 == strcmp(_token.str.c_str(), sz); 
 }
 
 bool Tokenizer::isNull() const
@@ -260,21 +258,34 @@ void Tokenizer::readValue(double& outValue) {
 
 	if (1 != sscanf_s(_token.str.c_str(), "%lf", &outValue))
 		throw MyError("readValue failed");
+	nextToken();
 }
 
 void Tokenizer::readValue(String& outValue) {
 
 	if (!isType(Type::String))	throw MyError("readValue(String) failed");
-	if (_token.str.empty())		throw MyError("readValue(String) failed");
+	
 
 	outValue = _token.str;
+	nextToken();
 }
 
 void Tokenizer::readValue(bool& outValue) {
 
-	if (isIdentifier("true"))		outValue = true;
-	else if (isIdentifier("false")) outValue = false;
-	else							throw MyError("readValue(bool) failed");
+	if (isIdentifier("true")) 
+	{
+		outValue = true;
+		nextToken();
+	}
+	else if (isIdentifier("false"))
+	{
+		outValue = false;
+		nextToken();
+	}
+	else 
+	{
+		throw MyError("readValue(bool) failed");
+	}
 }
 
 

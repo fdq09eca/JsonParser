@@ -29,9 +29,11 @@ const char* Util::isContainsSubString(const char* sz, const char* sub_sz)
 
 String Util::toUpper(const String& s) {
 	String o(s.begin(), s.end());
+	
 	for (auto& c : o) {
-		c = ::toupper(c);
+		c = static_cast<char>(::toupper(c));
 	}
+	
 	return o;
 }
 
@@ -39,7 +41,7 @@ String Util::toLower(const String& s) {
 	String o(s.begin(), s.end());
 
 	for (auto& c : o) {
-		c = ::tolower(c);
+		c = static_cast<char>(::tolower(c));
 	}
 	return o;
 }

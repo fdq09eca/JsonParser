@@ -86,8 +86,6 @@ void JsonValue::setNumber(JsonNumber n) {
 	_value.number = n;
 }
 
-
-
 JsonObject* JsonValue::getObject() const {
 	if (_type != EType::Object)
 		return nullptr;

@@ -13,10 +13,10 @@ private:
 	using Lexer = Tokenizer;
 
 	Lexer lexer;
+	
+	void expectOp(const char* op);
 
-	void _addJsonObjectMember(JsonObject* obj);
-
-	void _addJsonArrayElement(JsonArray* arr);
+	bool tryGetOp(const char* op);	
 
 public:
 	inline JsonParser(const char* sz) : lexer(sz) {
@@ -29,11 +29,11 @@ public:
 
 	inline bool nextToken() { return lexer.nextToken(); }
 
-	JsonValue* parseArray(JsonArray* arr = nullptr);
+	void parseArray(JsonValue& v);
 
-	JsonValue* parseObject(JsonObject* obj = nullptr);
+	void parseObject(JsonValue& v);
 
-	JsonValue* parseValue();
+	void parseValue(JsonValue& v);
 }; // class JsonParser
 
 

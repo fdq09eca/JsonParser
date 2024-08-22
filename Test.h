@@ -7,18 +7,55 @@ class ParserTests
 {
 public:
 	static void test_parseObject() {
-		JsonParser p("{ \"key1\" : [null, true, false, 123] }");
-		auto obj = p.parseObject();
-		TEST(obj != nullptr);
-		TEST(obj->getType() == JsonValue::EType::Object);
+		{
+			JsonParser p("{ \"key1\" : [null, true, false, 123] }");
+			JsonValue jv;
+
+			p.parseObject(jv);
+			
+			TEST(jv.getType() == JsonValue::EType::Object);
+
+			auto* obj = jv.getObject();
+			TEST(obj != nullptr);
+
+			TEST(obj->size() == 1);
+			TEST(obj->find("key1") != obj->end()); // key1 exists
+
+			const auto& v = obj->at("key1"); // jv non copyable
+			TEST(v.getType() == JsonValue::EType::Array);
+			auto* arr = v.getArray();
+			TEST(arr != nullptr);
+			TEST(arr->size() == 4);
+			TEST(arr->at(0).isNull());
+			TEST(arr->at(1).getBoolean());
+			TEST(arr->at(2).getBoolean() == false);
+			TEST(arr->at(3).getNumber() == 123);
+		}
+
+		{
+			JsonParser p("{ \"key1\" : 123 }");
+
+			auto jv = JsonValue();
+			p.parseValue(jv);
+			
+			TEST(jv.getType() == JsonValue::EType::Object);
+			
+
+
+
+		}
 	}
 };
 
 class TokenizerTests {
-	static void _getNumber(const char* v) { // TODO: pls teach me how to use marco and print out the v value
+	static void _getNumber(const char* v) {
 		Tokenizer t(v);
 		auto b = t.nextToken();
-		TEST(t.isNumber(v));
+		TEST(b);
+		
+		if (!TEST(t.isNumber(v))) {
+			printf("  [FAIL_VAL] v = %s\n", v);
+		}
 	}
 
 public:

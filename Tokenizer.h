@@ -5,8 +5,8 @@ namespace CL {
 struct Token {
 	enum class Type {
 		Undefined,		 // undefined		[x]
-		Null,			 // null			[x] None
-		Identifier,      // id				[x] true, false
+		Null,			 // null			[x] change to None
+		Identifier,      // id				[x] true, false, null
 		Number,			 // 0 - 9			[x] 
 		String,			 // "Hello, World!"	[x]
 		Op,				 // [ ] { } : ,		[x]
@@ -15,6 +15,7 @@ struct Token {
 
 	Type type = Type::Undefined;
 	String str;
+	// {"key": "value\t value2"};
 
 	inline void print() const {
 		printf("Token: (%d, %s)\n", type, str.c_str());
@@ -55,16 +56,16 @@ public:
 	bool isType(Type t) const;
 	bool isEquals(Type t, const char* sz) const;
 
-	bool isNull() const;
+	bool isNull() const; //to parser, parser manages syntax
 
 	bool isBool() const;
-	bool isBool(const char* sz) const;
+	bool isBool(const char* sz) const; // to parser, parser manages syntax
 
 	bool isString() const;
 	bool isString(const char* sz) const;
 
 	bool isNumber() const;
-	bool isNumber(const char* sz) const;
+	bool isNumber(const char* sz) const; // del
 
 	bool isOp() const;
 	bool isOp(const char* sz) const;
@@ -72,9 +73,9 @@ public:
 	bool isIdentifier() const;
 	bool isIdentifier(const char* sz) const;
 
-	void readValue(double& outValue);
-	void readValue(String& outValue);
-	void readValue(bool& outValue);
+	void readValue(double& outValue); // add nextToken, to parser
+	void readValue(String& outValue); // add nextToken, to parser
+	void readValue(bool& outValue);	  // add nextToken, to parser
 
 	bool isEnd() const;
 
