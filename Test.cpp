@@ -251,80 +251,74 @@ void MyCommonTests::test_getLine(){
 
 	{ // test print_lines
 
-		
 		auto* p = _c;
 		size_t getNLine = 3;
 		size_t lineNumber = 4;
-		size_t getUntilLine = lineNumber > getNLine? lineNumber - getNLine + 1 : 1;
-		
+		size_t getUntilLineNum = lineNumber > getNLine? lineNumber - getNLine + 1 : 1;
 		
 		Map<size_t, String> lines;
-		
 		for (auto i = 0; i < lineNumber; i++) {
-			auto l = lineNumber - i;
-			if (l < getUntilLine) {
-				break;
-			}
-			p = Util::getLine(sz, p, lines[lineNumber - i]);
+			auto n = lineNumber - i;
+			if (n < getUntilLineNum) break;
+			p = Util::getLine(sz, p, lines[n]);
 		}
 
-		// set eLine
-		auto& eLine = lines[lineNumber + 1];
-		p = Util::getLine(sz, _c, eLine);
+		auto lastLineNum = lineNumber + 1;
 		
-		MY_ASSERT(p != nullptr);
-		auto i = 0;
-		
-		while (true) {	
-			if (i == 0 && *p != eLine[0]) {
-				p++;
-				continue;
-			}
+		{	// set eLine
 
-			auto c = p + i;
-			
-			if (*c == '\0') {
-				eLine[i] = '\n';
-				break;
-			}
+			auto& eLine = lines[lastLineNum];
+			p = Util::getLine(sz, _c, eLine);
 
-			
-			if		( c  >  _c )	eLine[i] = '_';
-			else if ( c ==  _c )	eLine[i] = '^';
-			else if (*c == '\t')	eLine[i] = '\t';
-			else if (*c == '\n')	eLine[i] = '\n';
-			else					eLine[i] = '_';
-			
-			i++;
-		}
-
-		// print lines
-		printf("Error: Unexpected token[%c]\n", *_c);
-		puts  ("---------------------------");
-
-		for (auto j = 0; j < lineNumber + 1; j++) {
-			auto l = j + 1;
-
-			if (l < getUntilLine) {
-				continue;
-			}
-
-			if (l == lineNumber + 1) { // arrow Line
-				// padding for line number
-				auto npad = Util::ndigit(lineNumber) + strlen(": ");
-				
-				while (npad) {
-					putchar(' ');
-					npad--;
+			MY_ASSERT(p != nullptr);
+			auto i = 0;
+			while (true) {
+				if (i == 0 && *p != eLine[0]) {
+					p++;
+					continue;
 				}
-				
-				printf("%s", eLine.c_str());
+
+				auto c = p + i;
+
+				if (*c == '\0') {
+					eLine[i] = '\n';
+					break;
+				}
+
+
+				if (c > _c)	eLine[i] = '_';
+				else if (c == _c)	eLine[i] = '^';
+				else if (*c == '\t')	eLine[i] = '\t';
+				else if (*c == '\n')	eLine[i] = '\n';
+				else					eLine[i] = '_';
+
+				i++;
 			}
-			else {
-				printf("%d: %s", l, lines[l].c_str());
+		} // set eLine
+
+		{ // print lines
+			printf("Error: Unexpected token[%c]\n", *_c);
+			puts("---------------------------");
+
+			for (auto n = getUntilLineNum; n <= lastLineNum; n++) {
+
+				if (n == lastLineNum) { // arrow Line
+					// padding for line number
+					auto npad = Util::ndigit(lineNumber) + strlen(": ");
+
+					while (npad) {
+						putchar(' ');
+						npad--;
+					}
+
+					printf("%s", lines[lastLineNum].c_str());
+				}
+				else {
+					printf("%zu: %s", n, lines[n].c_str());
+				}
 			}
-		}
-	}
+		} // print lines
+	} // test print_lines
 
 }
 
