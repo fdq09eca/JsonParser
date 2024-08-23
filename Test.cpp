@@ -222,4 +222,51 @@ void TokenizerTests::test_getNumber() {
 	_getNumber("-1.0E-0");
 }
 
+void MyCommonTests::test_rfind()
+{
+	auto lineNumber = 4;
+	auto printNLine = 3;
+	auto* sz = "line1\nline2\nline3\nline4";
+	auto* _c = sz + strlen(sz) - 1;
+
+	auto* q = _c;
+	auto* p = q;
+
+	std::deque<String> lines;
+
+
+	while (true) {
+		p = Util::rfind(sz, q, '\n');
+		lines.emplace_front();
+		auto& line = lines.front();
+		if (!p) {
+			p = sz;
+			line.assign(p, q + 1);
+			line.append("\n");
+			line.insert(0, std::to_string(lineNumber) + ": ");
+			break;
+		}
+		else
+		{
+			line.assign(p + 1, q + 1);
+			line.append("\n");
+			line.insert(0, std::to_string(lineNumber) + ": ");
+			q = p - 1;
+			lineNumber--;
+			if (printNLine-- == 0) break;
+		}
+	}
+
+	const auto& lastLine = lines.back();
+	lines.emplace_back();
+	auto& eLine = lines.back();
+	eLine.resize(lastLine.size());
+
+
+	for (auto& line : lines) {
+		printf(line.c_str());
+	}
+
+}
+
 } // namespace CL
