@@ -86,73 +86,13 @@ size_t ndigit(int v);
 
 
 
-inline const char* rfind(const char* sz, const char* p, char c) {
-	if (!sz || !p) return nullptr;
-	MY_ASSERT(p > sz);
-	
-	while (true) {
-		if (p < sz)   return nullptr;
-		if (*p == c)  return p;
-		p--;
-	}
-}
+const char* rfind(const char* sz, const char* p, char c);
 
-inline const char* getLine(const char* sz, const char* c, String& outLine) {
-	if (!sz || !c || c == sz) return nullptr;
-	auto* e = sz + strlen(sz);
-	MY_ASSERT(*e == '\0');
-	
-	auto* q = strchr(c, '\n');
-	if (!q) q = e; // end of string
+const char* getLine(const char* sz, const char* c, String& outLine);
 
+const char* skipWhiteSpace(const char* sz);
 
-	auto* p = Util::rfind(sz, q - 1, '\n');
-	if (!p) p = sz;
-
-	MY_ASSERT(p >= sz && q <= e);
-
-	if (p == sz) {
-		outLine.assign(p, q);
-		outLine.append("\n");
-		return p;
-	}
-	else 
-	{
-		outLine.assign(p + 1, q);
-		outLine.append("\n");
-		return p - 1;
-	}
-}
-
-inline const char* skipWhiteSpace(const char* sz) {
-	if (sz == nullptr) {
-		return nullptr;
-	}
-
-
-	while (isspace(*sz)) {
-		++sz;
-	}
-	return sz;
-}
-
-inline const char* findNextChar(const char* sz, char c, char ec = NULL) {
-
-	auto* p = strchr(sz, c);
-
-	if (!p)
-		return nullptr;
-
-	if (!ec)
-		return p + 1;
-
-	if (*(p - 1) == ec) {
-		p++;
-		return findNextChar(p, c, ec);
-	}
-
-	return p + 1;
-}
+const char* findNextChar(const char* sz, char c, char ec = NULL);
 
 bool isStartsWithSubString(const String& mainStr, const String& subStr);
 
