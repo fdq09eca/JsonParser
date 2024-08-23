@@ -7,7 +7,25 @@ namespace CL
 {
 
 
+
 class JsonParser {
+
+	class Error : public std::exception {
+
+	public:
+		enum class Type {
+			Undefined = 0,
+			UnexpectedToken,
+		};
+		
+		Error(const JsonParser& parser, Type type);
+	
+	private:
+		const JsonParser& _parser;
+		Type _type = Type::Undefined;
+		Error() = delete;
+	};
+
 private:
 	using Lexer = Tokenizer;
 

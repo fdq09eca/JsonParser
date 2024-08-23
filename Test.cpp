@@ -223,34 +223,48 @@ void TokenizerTests::test_getNumber() {
 }
 
 void MyCommonTests::test_getLine(){
-	auto* sz = "line1\nline2\nline3\nli@e4";
-	auto* _c = sz + strlen(sz) - 3;
 	
-	{
+	{ // test getLine
+		auto* sz = "line1\nline2\nline3\nli@e4";
+		auto* _c = sz + strlen(sz) - 3;
 		auto* p = _c;
 		String line;
 		p = Util::getLine(sz, p, line);
 		TEST(p != nullptr);
-		if (!TEST(line == "li@e4\n")) { printf("  [FAIL] line = [%s]\n", line.c_str()); }
+		if (!TEST(line == "li@e4\n")) { printf("  [ACTUAL] line = [%s]\n", line.c_str()); }
 
 		p = Util::getLine(sz, p, line);
 		TEST(p != nullptr);
-		if (!TEST(line == "line3\n")) { printf("  [FAIL] line = [%s]\n", line.c_str()); }
+		if (!TEST(line == "line3\n")) { printf("  [ACTUAL] line = [%s]\n", line.c_str()); }
 
 		p = Util::getLine(sz, p, line);
 		TEST(p != nullptr);
-		if (!TEST(line == "line2\n")) { printf("  [FAIL] line = [%s]\n", line.c_str()); }
+		if (!TEST(line == "line2\n")) { printf("  [ACTUAL] line = [%s]\n", line.c_str()); }
 
 		p = Util::getLine(sz, p, line);
 		TEST(p != nullptr);
-		if (!TEST(line == "line1\n")) { printf("  [FAIL] line = [%s]\n", line.c_str()); }
+		if (!TEST(line == "line1\n")) { printf("  [ACTUAL] line = [%s]\n", line.c_str()); }
 
 		p = Util::getLine(sz, p, line);
 		TEST(p == nullptr);
 	}
 
-	{ // test print_lines
+	{
+		auto* sz = "li@e1\nline2\nline3\nline4";
+		auto* _c = sz + 3;
 
+		auto* p = _c;
+		String line;
+		p = Util::getLine(sz, p, line);
+		TEST(p != nullptr);
+		if (!TEST(line == "li@e1\n")) { printf("  [ACTUAL] line = [%s]\n", line.c_str()); }
+		p = Util::getLine(sz, p, line);
+		TEST(p == nullptr);
+	}
+
+	{ // test print_lines
+		auto* sz = "line1\nline2\nline3\nli@e4";
+		auto* _c = sz + strlen(sz) - 3;
 		auto* p = _c;
 		size_t getNLine = 3;
 		size_t lineNumber = 4;

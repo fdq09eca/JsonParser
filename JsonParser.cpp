@@ -81,24 +81,7 @@ void JsonParser::_expectOp(const char* op) {
 		
 
 	if (!_lexer.isOp(op)) {
-		String errMsg = "Error: : Unexpected token[" + token().str + "]\n-------------- - \n";
-		
-		//lines = _lexer.getLine();
 
-
-
-
-
-
-		// Error: : Unexpected token[=]
-		// -------------- -
-		// 1 : #if ShaderInfo
-		// 2 : Properties{
-		// 3:   Color4f         color = (0, 0, 0.5, 1)
-		// 4 : f32                     shininess = 0.5 // = global.shininess
-		// 5 : Texture2D       tex0 "Texture0" =
-		// 
-		// 									  ^ --
 
 		throw MyError("expectOp failed");
 	}
@@ -196,6 +179,19 @@ void JsonParser::readValue(bool& outValue) {
 		throw MyError("readValue(bool) failed");
 	}
 }
+
+
+
+
+JsonParser::Error::Error(const JsonParser& parser, Type errType) : _parser(parser)
+{
+	
+	String msg("JsonParser::Error, Type: [");
+	msg += std::to_string(static_cast<int>(errType));
+	msg += "]";
+	throw MyError(msg);
+}
+
 } // namespace CL
 
 

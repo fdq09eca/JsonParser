@@ -73,6 +73,9 @@ public:
 		perror(msg);
 		exit(errno);
 	}
+
+	MyError(const String& msg) : MyError(msg.c_str()) {}
+	
 };
 
 
