@@ -2,6 +2,8 @@
 
 namespace CL {
 size_t Util::ndigit(size_t v) {
+	if (v == 0) return 1;
+	
 	int n = 0;
 	while (v) {
 		v /= 10;

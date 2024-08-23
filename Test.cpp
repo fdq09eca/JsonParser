@@ -399,13 +399,16 @@ void MyCommonTests::test_rfind()
 void MyCommonTests::test_ndigit()
 {
 	size_t n = Util::ndigit(0);
-	if (!TEST(n == 0)) { printf("  [FAIL] n = %zu\n", n); }
+	if (!TEST(n == 1)) { printf("  [FAIL] n = %zu\n", n); }
 	
 	n = Util::ndigit(111);
 	if (!TEST(n == 3)) { printf("  [FAIL] n = %zu\n", n); }
 	
 	int v = -111;
 	n = Util::ndigit(v);
+	if (!TEST(n == 3)) { printf("  [FAIL] n = %zu\n", n); }
+
+	n = Util::ndigit(-123);
 	if (!TEST(n == 3)) { printf("  [FAIL] n = %zu\n", n); }
 
 	
