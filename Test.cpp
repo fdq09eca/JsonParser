@@ -266,11 +266,10 @@ void MyCommonTests::test_getLine(){
 		auto lastLineNum = lineNumber + 1;
 		
 		{	// set eLine
-
 			auto& eLine = lines[lastLineNum];
 			p = Util::getLine(sz, _c, eLine);
-
 			MY_ASSERT(p != nullptr);
+			
 			auto i = 0;
 			while (true) {
 				if (i == 0 && *p != eLine[0]) {
@@ -286,8 +285,8 @@ void MyCommonTests::test_getLine(){
 				}
 
 
-				if		(c > _c)		eLine[i] = '_';
-				else if (c == _c)		eLine[i] = '^';
+				if		( c >  _c  )	eLine[i] = '_';
+				else if ( c == _c  )	eLine[i] = '^';
 				else if (*c == '\t')	eLine[i] = '\t';
 				else if (*c == '\n')	eLine[i] = '\n';
 				else					eLine[i] = '_';
