@@ -286,8 +286,8 @@ void MyCommonTests::test_getLine(){
 				}
 
 
-				if (c > _c)	eLine[i] = '_';
-				else if (c == _c)	eLine[i] = '^';
+				if		(c > _c)		eLine[i] = '_';
+				else if (c == _c)		eLine[i] = '^';
 				else if (*c == '\t')	eLine[i] = '\t';
 				else if (*c == '\n')	eLine[i] = '\n';
 				else					eLine[i] = '_';
