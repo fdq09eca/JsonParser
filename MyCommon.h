@@ -5,9 +5,9 @@
 
 inline bool my_testfunc(bool x, const char* expr_str, int lineNumber) {
 	if (!x)
-		printf("[FAIL] line %d %s \n", lineNumber,expr_str);
+		printf("[FAIL] %d: %s \n", lineNumber,expr_str);
 	else {
-		printf("[OK] line %d %s\n", lineNumber,expr_str);
+		printf("[OK] %d: %s\n", lineNumber,expr_str);
 	}
 	return x;
 }

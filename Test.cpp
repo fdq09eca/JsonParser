@@ -231,7 +231,7 @@ void MyCommonTests::test_getLine(){
 		String line;
 		p = Util::getLine(sz, p, line);
 		TEST(p != nullptr);
-		if (!TEST(line == "line4\n")) { printf("  [FAIL] line = [%s]\n", line.c_str()); }
+		if (!TEST(line == "li@e4\n")) { printf("  [FAIL] line = [%s]\n", line.c_str()); }
 
 		p = Util::getLine(sz, p, line);
 		TEST(p != nullptr);
@@ -253,10 +253,18 @@ void MyCommonTests::test_getLine(){
 
 		
 		auto* p = _c;
+		size_t getNLine = 3;
 		size_t lineNumber = 4;
+		size_t getUntilLine = lineNumber > getNLine? lineNumber - getNLine + 1 : 1;
+		
+		
 		Map<size_t, String> lines;
 		
 		for (auto i = 0; i < lineNumber; i++) {
+			auto l = lineNumber - i;
+			if (l < getUntilLine) {
+				break;
+			}
 			p = Util::getLine(sz, p, lines[lineNumber - i]);
 		}
 
@@ -297,6 +305,10 @@ void MyCommonTests::test_getLine(){
 		for (auto j = 0; j < lineNumber + 1; j++) {
 			auto l = j + 1;
 
+			if (l < getUntilLine) {
+				continue;
+			}
+
 			if (l == lineNumber + 1) { // arrow Line
 				// padding for line number
 				auto npad = Util::ndigit(lineNumber) + strlen(": ");
@@ -318,70 +330,63 @@ void MyCommonTests::test_getLine(){
 
 void MyCommonTests::test_rfind()
 {
-	auto lineNumber = 4;
-	auto printNLine = 3;
-	auto* sz = "line1\nline2\nline3\nline4";
-	auto* _c = sz + strlen(sz) - 3;
+	{
+		auto* sz = "line1\nline2\nline3\nline4";
+		auto* _c = sz + strlen(sz) - 3; // 'n' of line4
+		auto* p = _c;
 
-	MY_ASSERT(*_c != '\0');
-	MY_ASSERT(*_c == 'n');
-	std::deque<String> lines;
+		p = Util::rfind(sz, p, '\n');
+		if (!TEST(p != nullptr))	{ printf("  [ACTUAL]	 p == %p\n", p); }
+		if (!TEST(*p == '\n'))		{ printf("  [ACTUAL]	*p == %c\n", *p); }
+		if (!TEST(*(p + 1) == 'l')) { printf("  [ACTUAL] (*p + 1) == %c\n", *(p + 1)); }
+		if (!TEST(*(p - 1) == '3')) { printf("  [ACTUAL] (*p - 1) == %c\n", *(p - 1)); }
 
 
+		p = Util::rfind(sz, --p, '\n');
+		if (!TEST(p != nullptr))	{ printf("  [ACTUAL]	 p == %p\n", p); }
+		if (!TEST(*p == '\n'))		{ printf("  [ACTUAL]	*p == %c\n", *p); }
+		if (!TEST(*(p + 1) == 'l')) { printf("  [ACTUAL] (*p + 1) == %c\n", *(p + 1)); }
+		if (!TEST(*(p - 1) == '2')) { printf("  [ACTUAL] (*p - 1) == %c\n", *(p - 1)); }
 
+		p = Util::rfind(sz, --p, '\n');
+		if (!TEST(p != nullptr))	{ printf("  [ACTUAL]	 p == %p\n", p); }
+		if (!TEST(*p == '\n'))		{ printf("  [ACTUAL]	*p == %c\n", *p); }
+		if (!TEST(*(p + 1) == 'l')) { printf("  [ACTUAL] (*p + 1) == %c\n", *(p + 1)); }
+		if (!TEST(*(p - 1) == '1')) { printf("  [ACTUAL] (*p - 1) == %c\n", *(p - 1)); }
+
+
+		p = Util::rfind(sz, --p, '\n');
+		if (!TEST(p == nullptr))	{ printf("  [ACTUAL]	 p == %p\n", p); }
+	}
 	
-	auto* q = strchr(_c, '\n');
+	{  
+		auto* sz = "line1\nline2\nline3\nline4";
+		auto* _c = sz + strlen(sz) - 6; // '\n' of line3
+		auto* p = _c;
 
-	if (!q) {
-		q = sz + strlen(sz) - 1;
+		p = Util::rfind(sz, p, '\n');
+		if (!TEST(p != nullptr))	{ printf("  [ACTUAL]	 p == %p\n", p); }
+		if (!TEST(*p == '\n'))		{ printf("  [ACTUAL]	*p == %c\n", *p); }
+		if (!TEST(*(p + 1) == 'l')) { printf("  [ACTUAL] (*p + 1) == %c\n", *(p + 1)); }
+		if (!TEST(*(p - 1) == '3')) { printf("  [ACTUAL] (*p - 1) == %c\n", *(p - 1)); }
+
+
+		p = Util::rfind(sz, --p, '\n');
+		if (!TEST(p != nullptr))	{ printf("  [ACTUAL]	 p == %p\n", p); }
+		if (!TEST(*p == '\n'))		{ printf("  [ACTUAL]	*p == %c\n", *p); }
+		if (!TEST(*(p + 1) == 'l')) { printf("  [ACTUAL] (*p + 1) == %c\n", *(p + 1)); }
+		if (!TEST(*(p - 1) == '2')) { printf("  [ACTUAL] (*p - 1) == %c\n", *(p - 1)); }
+
+		p = Util::rfind(sz, --p, '\n');
+		if (!TEST(p != nullptr))	{ printf("  [ACTUAL]	 p == %p\n", p); }
+		if (!TEST(*p == '\n'))		{ printf("  [ACTUAL]	*p == %c\n", *p); }
+		if (!TEST(*(p + 1) == 'l')) { printf("  [ACTUAL] (*p + 1) == %c\n", *(p + 1)); }
+		if (!TEST(*(p - 1) == '1')) { printf("  [ACTUAL] (*p - 1) == %c\n", *(p - 1)); }
+
+
+		p = Util::rfind(sz, --p, '\n');
+		if (!TEST(p == nullptr))	{ printf("  [ACTUAL]	 p == %p\n", p); }
 	}
-	else {
-		q--;
-	}
-	auto* p = Util::rfind(sz, q, '\n');
-
-	if (!p) {
-		p = sz;
-	}
-	else {
-		p++;
-	}
-
-
-
-
-	while (true) {
-		p = Util::rfind(sz, q, '\n');
-		lines.emplace_front();
-		auto& line = lines.front();
-		if (!p) {
-			p = sz;
-			line.assign(p, q + 1);
-			line.append("\n");
-			line.insert(0, std::to_string(lineNumber) + ": ");
-			break;
-		}
-		else
-		{
-			line.assign(p + 1, q + 1);
-			line.append("\n");
-			line.insert(0, std::to_string(lineNumber) + ": ");
-			q = p - 1;
-			lineNumber--;
-			if (printNLine-- == 0) break;
-		}
-	}
-
-	const auto& lastLine = lines.back();
-	lines.emplace_back();
-	auto& eLine = lines.back();
-	eLine.resize(lastLine.size());
-
-
-	for (auto& line : lines) {
-		printf(line.c_str());
-	}
-
 }
 
 void MyCommonTests::test_ndigit()
