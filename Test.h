@@ -3,6 +3,13 @@
 
 namespace CL {
 
+class MyCommonTests {
+public:
+	static void test_getLine();
+	static void test_rfind();
+	static void test_ndigit();
+};
+
 class ParserTests
 {
 public:

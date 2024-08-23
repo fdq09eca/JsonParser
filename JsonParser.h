@@ -8,7 +8,6 @@ namespace CL
 
 
 class JsonParser {
-
 private:
 	using Lexer = Tokenizer;
 
@@ -19,6 +18,7 @@ private:
 	bool _isNull() const; 
 	bool _isBool() const;
 	bool _isBool(const char* sz) const; 
+	
 
 public:
 	inline JsonParser(const char* sz) : _lexer(sz) { _lexer.nextToken(); }

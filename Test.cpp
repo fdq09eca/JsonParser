@@ -222,17 +222,132 @@ void TokenizerTests::test_getNumber() {
 	_getNumber("-1.0E-0");
 }
 
+void MyCommonTests::test_getLine(){
+	auto* sz = "line1\nline2\nline3\nli@e4";
+	auto* _c = sz + strlen(sz) - 3;
+	
+	{
+		auto* p = _c;
+		String line;
+		p = Util::getLine(sz, p, line);
+		TEST(p != nullptr);
+		if (!TEST(line == "line4\n")) { printf("  [FAIL] line = [%s]\n", line.c_str()); }
+
+		p = Util::getLine(sz, p, line);
+		TEST(p != nullptr);
+		if (!TEST(line == "line3\n")) { printf("  [FAIL] line = [%s]\n", line.c_str()); }
+
+		p = Util::getLine(sz, p, line);
+		TEST(p != nullptr);
+		if (!TEST(line == "line2\n")) { printf("  [FAIL] line = [%s]\n", line.c_str()); }
+
+		p = Util::getLine(sz, p, line);
+		TEST(p != nullptr);
+		if (!TEST(line == "line1\n")) { printf("  [FAIL] line = [%s]\n", line.c_str()); }
+
+		p = Util::getLine(sz, p, line);
+		TEST(p == nullptr);
+	}
+
+	{ // test print_lines
+
+		
+		auto* p = _c;
+		size_t lineNumber = 4;
+		Map<size_t, String> lines;
+		
+		for (auto i = 0; i < lineNumber; i++) {
+			p = Util::getLine(sz, p, lines[lineNumber - i]);
+		}
+
+		// set eLine
+		auto& eLine = lines[lineNumber + 1];
+		p = Util::getLine(sz, _c, eLine);
+		
+		MY_ASSERT(p != nullptr);
+		auto i = 0;
+		
+		while (true) {	
+			if (i == 0 && *p != eLine[0]) {
+				p++;
+				continue;
+			}
+
+			auto c = p + i;
+			
+			if (*c == '\0') {
+				eLine[i] = '\n';
+				break;
+			}
+
+			
+			if		( c  >  _c )	eLine[i] = '_';
+			else if ( c ==  _c )	eLine[i] = '^';
+			else if (*c == '\t')	eLine[i] = '\t';
+			else if (*c == '\n')	eLine[i] = '\n';
+			else					eLine[i] = '_';
+			
+			i++;
+		}
+
+		// print lines
+		printf("Error: Unexpected token[%c]\n", *_c);
+		puts  ("---------------------------");
+
+		for (auto j = 0; j < lineNumber + 1; j++) {
+			auto l = j + 1;
+
+			if (l == lineNumber + 1) { // arrow Line
+				// padding for line number
+				auto npad = Util::ndigit(lineNumber) + strlen(": ");
+				
+				while (npad) {
+					putchar(' ');
+					npad--;
+				}
+				
+				printf("%s", eLine.c_str());
+			}
+			else {
+				printf("%d: %s", l, lines[l].c_str());
+			}
+		}
+	}
+
+}
+
 void MyCommonTests::test_rfind()
 {
 	auto lineNumber = 4;
 	auto printNLine = 3;
 	auto* sz = "line1\nline2\nline3\nline4";
-	auto* _c = sz + strlen(sz) - 1;
+	auto* _c = sz + strlen(sz) - 3;
 
-	auto* q = _c;
-	auto* p = q;
-
+	MY_ASSERT(*_c != '\0');
+	MY_ASSERT(*_c == 'n');
 	std::deque<String> lines;
+
+
+
+	
+	auto* q = strchr(_c, '\n');
+
+	if (!q) {
+		q = sz + strlen(sz) - 1;
+	}
+	else {
+		q--;
+	}
+	auto* p = Util::rfind(sz, q, '\n');
+
+	if (!p) {
+		p = sz;
+	}
+	else {
+		p++;
+	}
+
+
 
 
 	while (true) {
@@ -266,6 +381,22 @@ void MyCommonTests::test_rfind()
 	for (auto& line : lines) {
 		printf(line.c_str());
 	}
+
+}
+
+void MyCommonTests::test_ndigit()
+{
+	size_t n = Util::ndigit(0);
+	if (!TEST(n == 0)) { printf("  [FAIL] n = %zu\n", n); }
+	
+	n = Util::ndigit(111);
+	if (!TEST(n == 3)) { printf("  [FAIL] n = %zu\n", n); }
+	
+	int v = -111;
+	n = Util::ndigit(v);
+	if (!TEST(n == 3)) { printf("  [FAIL] n = %zu\n", n); }
+
+	
 
 }
 

@@ -40,6 +40,36 @@ class Tokenizer
 	char _nextChar();
 	char _nextChar(size_t n);
 	
+	
+	void _getLine(String& outLine, size_t nPrevLine = 0) {
+		auto* q = _c;
+		String line;
+
+		while (true) {
+			auto* p = Util::rfind(_src, q, '\n');
+
+			if (p == nullptr) {
+				p = _src;
+			}
+
+			line.assign(p + 1, q);
+
+			line = std::to_string(lineNumber()) + " : " + line;
+
+			outLine = line + outLine;
+
+			if (nPrevLine) {
+				--nPrevLine;
+				--p;
+				q = p;
+			}
+			else {
+				return;
+			}
+			
+		}
+	}
+	
 	void _skipSpaces();
 
 public:

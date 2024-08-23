@@ -1,6 +1,21 @@
 #include "MyCommon.h"
 
 namespace CL {
+size_t Util::ndigit(size_t v) {
+	int n = 0;
+	while (v) {
+		v /= 10;
+		n++;
+	}
+	return n;
+}
+
+size_t Util::ndigit(int v)
+{
+	v = abs(v);
+	return Util::ndigit(static_cast<size_t>(v));
+}
+
 
 bool Util::isStartsWithSubString(const String& mainStr, const String& subStr)
 {

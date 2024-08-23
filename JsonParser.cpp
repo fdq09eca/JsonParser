@@ -20,6 +20,8 @@ bool JsonParser::_isBool(const char* sz) const
 	return _isBool() && 0 == strcmp(token().str.c_str(), sz);
 }
 
+
+
 void JsonParser::parseValue(JsonValue& v) {
 	
 	switch (token().type)
@@ -77,18 +79,31 @@ void JsonParser::parseValue(JsonValue& v) {
 
 void JsonParser::_expectOp(const char* op) {
 		
-// Error: : Unexpected token[=]
-// -------------- -
-// 1 : #if ShaderInfo
-// 2 : Properties{
-// 3:   Color4f         color = (0, 0, 0.5, 1)
-// 4 : f32                     shininess = 0.5 // = global.shininess
-// 5 : Texture2D       tex0 "Texture0" =
-// 
-// 									  ^ --
 
-		if (!_lexer.isOp(op)) throw MyError("expectOp failed");
-		_lexer.nextToken();
+	if (!_lexer.isOp(op)) {
+		String errMsg = "Error: : Unexpected token[" + token().str + "]\n-------------- - \n";
+		
+		//lines = _lexer.getLine();
+
+
+
+
+
+
+		// Error: : Unexpected token[=]
+		// -------------- -
+		// 1 : #if ShaderInfo
+		// 2 : Properties{
+		// 3:   Color4f         color = (0, 0, 0.5, 1)
+		// 4 : f32                     shininess = 0.5 // = global.shininess
+		// 5 : Texture2D       tex0 "Texture0" =
+		// 
+		// 									  ^ --
+
+		throw MyError("expectOp failed");
+	}
+
+	_lexer.nextToken();
 }
 
 bool JsonParser::_matchOp(const char* op) {
