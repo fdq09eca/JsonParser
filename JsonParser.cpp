@@ -104,7 +104,9 @@ bool JsonParser::_matchOp(const char* op) {
 }
 
 MyError JsonParser::_unExpectTokenError(const char* expectedToken, size_t nLines) {
+	
 	Map<size_t, String> lines;
+	
 	_getLines(lines, nLines);
 
 	size_t lineNumber = _lexer.lineNumber();
@@ -112,8 +114,6 @@ MyError JsonParser::_unExpectTokenError(const char* expectedToken, size_t nLines
 	auto* _c = _lexer.c() - 1; // this is annoying. I need to find a better way to handle this.
 
 	auto eLineNum = lineNumber + 1;
-
-
 
 	auto& eLine = lines[eLineNum];
 	auto* p = Util::getLine(sz, _c, eLine);
@@ -132,8 +132,8 @@ MyError JsonParser::_unExpectTokenError(const char* expectedToken, size_t nLines
 		}
 
 
-		if (c  >  _c)	eLine[i] = '_';
-		else if (c == _c)	eLine[i] = '^';
+		if		(c  >	_c )	eLine[i] = '_';
+		else if (c  ==	_c )	eLine[i] = '^';
 		else if (*c == '\t')	eLine[i] = '\t';
 		else if (*c == '\n')	eLine[i] = '\n';
 		else					eLine[i] = '_';
