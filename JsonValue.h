@@ -76,6 +76,42 @@ public:
 	void		setString(const char* sz);
 	JsonString* setToString();
 
+	void toString(String& out) const {
+		switch (_type)
+		{
+			case EType::Undefined:
+				throw MyError("JsonValue::toString: Undefined");
+			case EType::Null:
+				out = "null";
+				break;
+			case EType::Number:
+				out = std::to_string(_value.number);
+				break;
+			case EType::Boolean:
+				out = _value.boolean ? "true" : "false";
+				break;
+			case EType::Array:
+				out = "[";
+				for (auto& v : *_value.array)
+				{
+					v.toString(out);
+					out += ", ";
+				}
+				out += "]";
+				break;
+			case EType::Object:
+				out = "{";
+				for (auto & item : *_value.object)
+				{
+					out += item.first;
+					out += ": ";
+					item.second.toString(out);
+					out += ", ";
+				}
+				out += "}";
+				break;
+		}
+	};
 }; // class JsonValue
 
 } // namespace CL
