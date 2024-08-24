@@ -89,7 +89,15 @@ void ParserTests::test_parseObject() {
 		TEST(jv.getObject()->at("key1").getObject()->at("key2").getArray()->at(1).isNull());
 		TEST(jv.getObject()->at("key1").getObject()->at("key2").getArray()->at(2).getBoolean() == false);
 	}
-} 
+}
+void ParserTests::test_unExpectTokenError()
+{
+	JsonParser p("{ \"key1\" : [null, true, false, 123] ]");
+	JsonValue jv;
+
+	p.parseObject(jv);
+}
+
 
 void TokenizerTests::_getNumber(const char* v) {
 	Tokenizer t(v);

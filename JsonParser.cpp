@@ -109,7 +109,7 @@ MyError JsonParser::_unExpectTokenError(const char* expectedToken, size_t nLines
 
 	size_t lineNumber = _lexer.lineNumber();
 	auto* sz = _lexer.src();
-	auto* _c = _lexer.c();
+	auto* _c = _lexer.c() - 1; // this is annoying. I need to find a better way to handle this.
 
 	auto eLineNum = lineNumber + 1;
 
@@ -118,14 +118,11 @@ MyError JsonParser::_unExpectTokenError(const char* expectedToken, size_t nLines
 	auto& eLine = lines[eLineNum];
 	auto* p = Util::getLine(sz, _c, eLine);
 	MY_ASSERT(p != nullptr);
+	p = sz;
 
 	auto i = 0;
-
 	while (true) {
-		if (i == 0 && *p != eLine[0]) {
-			p++;
-			continue;
-		}
+		
 
 		auto c = p + i;
 
@@ -148,10 +145,11 @@ MyError JsonParser::_unExpectTokenError(const char* expectedToken, size_t nLines
 	size_t getUntilLineNum = lineNumber > nLines ? lineNumber - nLines + 1 : 1;
 	size_t lastLineNum = eLineNum;
 
+	auto t = token().type == Token::Type::Eof ? "Eof" : token().str;
 
-	errMsg += "Error: Unexpected token[" + token().str + "], " + String("expected [") + expectedToken;
-	errMsg += "]\n";
-	errMsg += "---------------------------";
+
+	errMsg += "Error: Unexpected token: " + t + " Expected: " + expectedToken + "\n";
+	errMsg += "---------------------------\n";
 
 	String line;
 	for (auto n = getUntilLineNum; n <= lastLineNum; n++) {
@@ -171,6 +169,8 @@ MyError JsonParser::_unExpectTokenError(const char* expectedToken, size_t nLines
 		else {
 			line += std::to_string(n) + ": " + lines[n];
 		}
+
+		errMsg += line;
 	}
 
 	return MyError(errMsg);

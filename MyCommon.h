@@ -70,8 +70,7 @@ class MyError : public std::exception
 public:
 	MyError(const char* msg)
 	{
-		perror(msg);
-		exit(errno);
+		std::cerr << msg;
 	}
 
 	MyError(const String& msg) : MyError(msg.c_str()) {}
