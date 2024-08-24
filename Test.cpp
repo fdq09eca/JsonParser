@@ -423,4 +423,105 @@ void MyCommonTests::test_ndigit()
 
 }
 
+void JsonValueTests::test_toString()
+{
+	{
+		JsonValue jv;
+		jv.setNull();
+
+		String r;
+		jv.toString(r);
+		TEST(r == "null");
+	}
+
+	{
+		JsonValue jv;
+		jv.setNumber(123);
+
+		String r;
+		jv.toString(r);
+		TEST(r == "123");
+		if (!TEST(r == "123")) printf("  [ACTUAL] r == %s\n", r.c_str());
+
+		jv.setNumber(-123);
+		jv.toString(r);
+		TEST(r == "-123");
+		if (!TEST(r == "-123")) printf("  [ACTUAL] r == %s\n", r.c_str());
+		
+		jv.setNumber(123.5);
+		jv.toString(r);
+		if (!TEST(r == "123.5")) printf("  [ACTUAL] r == %s\n", r.c_str());
+		
+		jv.setNumber(-123.5);
+		jv.toString(r);
+		if (!TEST(r == "-123.5")) printf("  [ACTUAL] r == %s\n", r.c_str());
+
+		jv.setNumber(123.5e+5);
+		jv.toString(r);
+		if (!TEST(r == "123.5e+5")) printf("  [ACTUAL] r == %s\n", r.c_str());
+
+		jv.setNumber(-123.5e+5);
+		jv.toString(r);
+		if (!TEST(r == "-123.5e+5")) printf("  [ACTUAL] r == %s\n", r.c_str());
+	}
+
+	{
+		JsonValue jv;
+		jv.setString("Hello!");
+
+		String r;
+		jv.toString(r);
+		TEST(r == "\"Hello!\"");
+	}
+
+	{
+		JsonValue jv;
+		jv.setBoolean(true);
+
+		String r;
+		jv.toString(r);
+		TEST(r == "true");
+
+		jv.setBoolean(false);
+		jv.toString(r);
+		TEST(r == "false");
+	}
+
+	{
+		JsonValue jv;
+		
+		auto* arr = jv.setToArray();
+		
+		arr->emplace_back();
+		arr->back().setNumber(123.5e-5);
+		
+		arr->emplace_back();
+		arr->back().setBoolean(true);
+		
+		arr->emplace_back();
+		arr->back().setNull();
+
+		arr->emplace_back();
+		auto* eArr = arr->back().setToArray();
+		
+		eArr->emplace_back();
+		eArr->back().setNull();
+
+		eArr->emplace_back();
+		eArr->back().setBoolean(false);
+
+		eArr->emplace_back();
+		eArr->back().setNumber(321.5e+5);
+
+		eArr->emplace_back();
+		eArr->back().setString("Hello!");
+		
+		String r;
+		jv.toString(r);
+		
+		if (!TEST(r == "[123.5e-5, true, null, [null, false, 321.5e+5, \"Hello!\"]]")) printf("  [ACTUAL] r == %s\n", r.c_str());
+	}
+
+}
+
 } // namespace CL

@@ -77,25 +77,37 @@ public:
 	JsonString* setToString();
 
 	void toString(String& out) const {
+		out.clear();
 		switch (_type)
 		{
 			case EType::Undefined:
 				throw MyError("JsonValue::toString: Undefined");
+			case EType::String: {
+				out = *getString() ;
+				out = "\"" + out + "\"";
+			} break;
 			case EType::Null:
 				out = "null";
 				break;
 			case EType::Number:
+			{	//TODO: how about scientific notation?
 				out = std::to_string(_value.number);
+				out.erase(out.find_last_not_of('0') + 1, std::string::npos);
+				out.erase(out.find_last_not_of('.') + 1, std::string::npos);
+			}
 				break;
 			case EType::Boolean:
 				out = _value.boolean ? "true" : "false";
 				break;
 			case EType::Array:
-				out = "[";
-				for (auto& v : *_value.array)
+				out += "[";
+				for (const auto& v : *_value.array)
 				{
-					v.toString(out);
-					out += ", ";
+					String e;
+					v.toString(e);
+					out += e;
+					if (&v != &_value.array->back())
+						out += ", ";
 				}
 				out += "]";
 				break;

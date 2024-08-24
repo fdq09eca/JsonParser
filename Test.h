@@ -10,6 +10,11 @@ public:
 	static void test_ndigit();
 };
 
+class JsonValueTests {
+public:
+	static void test_toString();
+};
+
 class ParserTests
 {
 public:

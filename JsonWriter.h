@@ -20,6 +20,7 @@ public:
 		
 		switch (v.getType())
 		{
+		default:							{ throw MyError("[ERR] Unknown type");			} break;
 		case JsonValue::EType::Undefined:	{ throw MyError("Undefined type");				} break;
 		case JsonValue::EType::Null:		{ _ofs << "null";								} break;
 		case JsonValue::EType::Boolean:		{ _ofs << (v.getBoolean() ? "true" : "false");	} break;
@@ -46,9 +47,6 @@ public:
 			}
 			_ofs << "}";
 		} break;
-		default:
-			throw MyError("[ERR] Unknown type");
-			break;
 		}
 	}
 }; // class JsonWriter

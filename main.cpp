@@ -12,7 +12,8 @@ int main()
 	//CL::MyCommonTests::test_rfind();
 	//CL::MyCommonTests::test_getLine();
 	//CL::MyCommonTests::test_ndigit();
-	CL::ParserTests::test_unExpectTokenError();
+	//CL::ParserTests::test_unExpectTokenError();
+	CL::JsonValueTests::test_toString();
 	return 0;
 }
 
