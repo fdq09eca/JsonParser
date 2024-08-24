@@ -89,7 +89,15 @@ void ParserTests::test_parseObject() {
 		TEST(jv.getObject()->at("key1").getObject()->at("key2").getArray()->at(1).isNull());
 		TEST(jv.getObject()->at("key1").getObject()->at("key2").getArray()->at(2).getBoolean() == false);
 	}
-} 
+}
+void ParserTests::test_unExpectTokenError()
+{
+	JsonParser p("{ \"key1\" : [null, true, false, 123] ]");
+	JsonValue jv;
+
+	p.parseObject(jv);
+}
+
 
 void TokenizerTests::_getNumber(const char* v) {
 	Tokenizer t(v);
@@ -223,34 +231,48 @@ void TokenizerTests::test_getNumber() {
 }
 
 void MyCommonTests::test_getLine(){
-	auto* sz = "line1\nline2\nline3\nli@e4";
-	auto* _c = sz + strlen(sz) - 3;
 	
-	{
+	{ // test getLine
+		auto* sz = "line1\nline2\nline3\nli@e4";
+		auto* _c = sz + strlen(sz) - 3;
 		auto* p = _c;
 		String line;
 		p = Util::getLine(sz, p, line);
 		TEST(p != nullptr);
-		if (!TEST(line == "li@e4\n")) { printf("  [FAIL] line = [%s]\n", line.c_str()); }
+		if (!TEST(line == "li@e4\n")) { printf("  [ACTUAL] line = [%s]\n", line.c_str()); }
 
 		p = Util::getLine(sz, p, line);
 		TEST(p != nullptr);
-		if (!TEST(line == "line3\n")) { printf("  [FAIL] line = [%s]\n", line.c_str()); }
+		if (!TEST(line == "line3\n")) { printf("  [ACTUAL] line = [%s]\n", line.c_str()); }
 
 		p = Util::getLine(sz, p, line);
 		TEST(p != nullptr);
-		if (!TEST(line == "line2\n")) { printf("  [FAIL] line = [%s]\n", line.c_str()); }
+		if (!TEST(line == "line2\n")) { printf("  [ACTUAL] line = [%s]\n", line.c_str()); }
 
 		p = Util::getLine(sz, p, line);
 		TEST(p != nullptr);
-		if (!TEST(line == "line1\n")) { printf("  [FAIL] line = [%s]\n", line.c_str()); }
+		if (!TEST(line == "line1\n")) { printf("  [ACTUAL] line = [%s]\n", line.c_str()); }
 
 		p = Util::getLine(sz, p, line);
 		TEST(p == nullptr);
 	}
 
-	{ // test print_lines
+	{
+		auto* sz = "li@e1\nline2\nline3\nline4";
+		auto* _c = sz + 3;
 
+		auto* p = _c;
+		String line;
+		p = Util::getLine(sz, p, line);
+		TEST(p != nullptr);
+		if (!TEST(line == "li@e1\n")) { printf("  [ACTUAL] line = [%s]\n", line.c_str()); }
+		p = Util::getLine(sz, p, line);
+		TEST(p == nullptr);
+	}
+
+	{ // test print_lines
+		auto* sz = "line1\nline2\nline3\nli@e4";
+		auto* _c = sz + strlen(sz) - 3;
 		auto* p = _c;
 		size_t getNLine = 3;
 		size_t lineNumber = 4;
@@ -385,13 +407,16 @@ void MyCommonTests::test_rfind()
 void MyCommonTests::test_ndigit()
 {
 	size_t n = Util::ndigit(0);
-	if (!TEST(n == 0)) { printf("  [FAIL] n = %zu\n", n); }
+	if (!TEST(n == 1)) { printf("  [FAIL] n = %zu\n", n); }
 	
 	n = Util::ndigit(111);
 	if (!TEST(n == 3)) { printf("  [FAIL] n = %zu\n", n); }
 	
 	int v = -111;
 	n = Util::ndigit(v);
+	if (!TEST(n == 3)) { printf("  [FAIL] n = %zu\n", n); }
+
+	n = Util::ndigit(-123);
 	if (!TEST(n == 3)) { printf("  [FAIL] n = %zu\n", n); }
 
 	

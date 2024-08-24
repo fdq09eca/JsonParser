@@ -178,7 +178,11 @@ bool Tokenizer::nextToken() {
 		
 	}
 
-	default: throw MyError("nextToken failed"); 
+	
+	default: {
+		auto errMsg = String("[ERR] unknown Token: ") + *_c + " (" + std::to_string(_lineNumber) + ":" + std::to_string(_columnNumber) + ")\n";
+		throw MyError(errMsg); 
+	}
 	
 	}
 }

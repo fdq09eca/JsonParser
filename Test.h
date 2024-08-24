@@ -14,6 +14,7 @@ class ParserTests
 {
 public:
 	static void test_parseObject();
+	static void test_unExpectTokenError();
 }; // class ParserTests
 
 class TokenizerTests {

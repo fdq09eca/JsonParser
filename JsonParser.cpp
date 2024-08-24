@@ -20,6 +20,21 @@ bool JsonParser::_isBool(const char* sz) const
 	return _isBool() && 0 == strcmp(token().str.c_str(), sz);
 }
 
+void JsonParser::_getLines(Map<size_t, String>& outLines, size_t nLines) {
+
+	size_t lineNumber = _lexer.lineNumber();
+	const char* sz = _lexer.src();
+	const char* p = _lexer.c();
+
+	size_t getUntilLineNum = lineNumber > nLines ? lineNumber - nLines + 1 : 1;
+
+	for (auto i = 0; i < lineNumber; i++) {
+		auto n = lineNumber - i;
+		if (n < getUntilLineNum) break;
+		p = Util::getLine(sz, p, outLines[n]);
+	}
+}
+
 
 
 void JsonParser::parseValue(JsonValue& v) {
@@ -73,36 +88,10 @@ void JsonParser::parseValue(JsonValue& v) {
 	}
 }
 
-
-
-
-
 void JsonParser::_expectOp(const char* op) {
 		
 
-	if (!_lexer.isOp(op)) {
-		String errMsg = "Error: : Unexpected token[" + token().str + "]\n-------------- - \n";
-		
-		//lines = _lexer.getLine();
-
-
-
-
-
-
-		// Error: : Unexpected token[=]
-		// -------------- -
-		// 1 : #if ShaderInfo
-		// 2 : Properties{
-		// 3:   Color4f         color = (0, 0, 0.5, 1)
-		// 4 : f32                     shininess = 0.5 // = global.shininess
-		// 5 : Texture2D       tex0 "Texture0" =
-		// 
-		// 									  ^ --
-
-		throw MyError("expectOp failed");
-	}
-
+	if (!_lexer.isOp(op)) throw _unExpectTokenError(op);
 	_lexer.nextToken();
 }
 
@@ -112,6 +101,79 @@ bool JsonParser::_matchOp(const char* op) {
 		return true;
 	}
 	return false;
+}
+
+MyError JsonParser::_unExpectTokenError(const char* expectedToken, size_t nLines) {
+	
+	Map<size_t, String> lines;
+	
+	_getLines(lines, nLines);
+
+	size_t lineNumber = _lexer.lineNumber();
+	auto* sz = _lexer.src();
+	auto* _c = _lexer.c() - 1; // this is annoying. I need to find a better way to handle this.
+
+	auto eLineNum = lineNumber + 1;
+
+	auto& eLine = lines[eLineNum];
+	auto* p = Util::getLine(sz, _c, eLine);
+	MY_ASSERT(p != nullptr);
+	p = sz;
+
+	auto i = 0;
+	while (true) {
+		
+
+		auto c = p + i;
+
+		if (*c == '\0') {
+			eLine[i] = '\n';
+			break;
+		}
+
+
+		if		(c  >	_c )	eLine[i] = '_';
+		else if (c  ==	_c )	eLine[i] = '^';
+		else if (*c == '\t')	eLine[i] = '\t';
+		else if (*c == '\n')	eLine[i] = '\n';
+		else					eLine[i] = '_';
+
+		i++;
+	}
+
+	String errMsg;
+	size_t getUntilLineNum = lineNumber > nLines ? lineNumber - nLines + 1 : 1;
+	size_t lastLineNum = eLineNum;
+
+	auto t = token().type == Token::Type::Eof ? "Eof" : token().str;
+
+
+	errMsg += "Error: Unexpected token: " + t + " Expected: " + expectedToken + "\n";
+	errMsg += "---------------------------\n";
+
+	String line;
+	for (auto n = getUntilLineNum; n <= lastLineNum; n++) {
+
+		line.clear();
+		if (n == lastLineNum) { // arrow Line
+			// padding for line number
+			auto npad = Util::ndigit(n) + strlen(": ");
+
+			while (npad) {
+				line += ' ';
+				npad--;
+			}
+
+			line += lines[lastLineNum];
+		}
+		else {
+			line += std::to_string(n) + ": " + lines[n];
+		}
+
+		errMsg += line;
+	}
+
+	return MyError(errMsg);
 }
 
 void JsonParser::parseArray(JsonValue& v) {
@@ -129,7 +191,7 @@ void JsonParser::parseArray(JsonValue& v) {
 		
 		if (_matchOp(",")) continue;
 		if (_matchOp("]")) break;
-		throw MyError("parseArray failed");
+		throw _unExpectTokenError("] or ,");
 	}
 }
 
@@ -144,7 +206,7 @@ void JsonParser::parseObject(JsonValue& v) {
 
 		String memberName;
 		readValue(memberName);
-		if (memberName.empty()) throw MyError("parseObject failed");
+		if (memberName.empty()) throw MyError("parseObject failed, memberName is empty");
 
 		
 		auto& val = obj[memberName];
@@ -154,7 +216,7 @@ void JsonParser::parseObject(JsonValue& v) {
 
 		if (_matchOp(",")) continue;
 		if (_matchOp("}")) break;
-		throw MyError("parseObject failed");
+		throw _unExpectTokenError("} or ,");
 		
 	}
 }
@@ -162,7 +224,7 @@ void JsonParser::parseObject(JsonValue& v) {
 void JsonParser::readValue(double& outValue) {
 
 	if (!_lexer.isNumber())		throw MyError("readValue(double) failed");
-	if (token().str.empty()) throw MyError("readValue(double) failed");
+	if (token().str.empty())	throw MyError("readValue(double) failed");
 
 
 	if (1 != sscanf_s(token().str.c_str(), "%lf", &outValue))
@@ -196,6 +258,7 @@ void JsonParser::readValue(bool& outValue) {
 		throw MyError("readValue(bool) failed");
 	}
 }
+
 } // namespace CL
 
 

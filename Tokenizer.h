@@ -79,7 +79,10 @@ public:
 
 	~Tokenizer();
 
-
+	inline const char* src() const { return _src; }
+	inline const char* dst() const { return _dst; }
+	inline const char* c() const { return _c; }
+	
 	inline const Token& token()			const { return _token;}
 	inline const size_t lineNumber()	const { return _lineNumber; }
 	inline const size_t columnNumber()	const { return _columnNumber; }

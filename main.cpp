@@ -9,9 +9,10 @@ int main()
 	//CL::TokenizerTests::test_nextToken();
 	//CL::ParserTests::test_parseObject();
 	//CL::MyCommonTests::test_rfind();
-	CL::MyCommonTests::test_rfind();
-	CL::MyCommonTests::test_getLine();
-	CL::MyCommonTests::test_ndigit();
+	//CL::MyCommonTests::test_rfind();
+	//CL::MyCommonTests::test_getLine();
+	//CL::MyCommonTests::test_ndigit();
+	CL::ParserTests::test_unExpectTokenError();
 	return 0;
 }
 
